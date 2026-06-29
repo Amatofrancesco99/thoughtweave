@@ -50,7 +50,6 @@ thoughtweave/
 │   └── terraform.tfvars     # Auto-loaded default values
 │
 ├── tests/                   # Test suite: structural, content, compliance, artifact, terraform validation (Node.js with vitest)
-│   └── package.json
 ├── .gitignore               # Ignores system files, dependencies, skill cache, and logs
 ├── AGENTS.md                # Agent instructions for contributing via coding agent
 ├── CLAUDE.md                # Symlink to AGENTS.md (for Claude compatibility)

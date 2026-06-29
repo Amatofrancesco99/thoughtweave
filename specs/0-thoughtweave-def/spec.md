@@ -685,13 +685,14 @@ These tags should be used sparingly and only where they add value. A generated s
 
 ### Mermaid Diagrams
 
-A picture is worth a thousand words - but only when the picture adds clarity. Only generate Mermaid diagrams when they improve understanding. A diagram is not decoration. It should communicate something that text cannot communicate as effectively. If text is clearer, skip the diagram.
+A picture is worth a thousand words - but only when the picture adds clarity. Only generate Mermaid diagrams when they improve understanding. A diagram is not decoration. It should communicate something that text cannot communicate as effectively. If text is clearer, skip the diagram. This convention applies to all generated markdown documents, including READMEs.
 
 Configuration:
 
 - **theme**: default
 - **look**: handDrawn - gives diagrams a sketch-like quality that feels more approachable
 - **layout**: dagre - directed graph layout that works well for most software diagrams
+- **themeCSS**: `svg { background: white !important; }` - forces a white diagram background so charts remain readable in VS Code dark theme (Mermaid in dark mode renders with a transparent background, making pastel nodes nearly invisible against dark chat/editor backgrounds)
 - **color palette**: light pastel backgrounds with dark text for readability. Use the following palette as a reference:
   - Start nodes: light green (`#CEEAD6`)
   - Process nodes: light blue (`#D2E3FC`)
@@ -922,7 +923,7 @@ The specification explains intent. The changes document explains outcome. They a
 Together they tell the complete story of a change - from the initial idea, through the reasoning and decisions, to the final implementation and its impact.
 
 > [!IMPORTANT]
-> For writing docs and features — and especially when incrementing an already-started codebase — the agent must have access to the repository and codebase. Without reading the existing code, it cannot understand conventions, module boundaries, or architectural decisions. All three skills depend on the agent's ability to read files, inspect structure, and analyze existing patterns: `/init-agents-file` (inspects repo structure and stack), `/sdd` (context discovery and codebase inspection), and `/changes` (implementation validation against the spec).
+> For writing docs and features - and especially when incrementing an already-started codebase - the agent must have access to the repository and codebase. Without reading the existing code, it cannot understand conventions, module boundaries, or architectural decisions. All three skills depend on the agent's ability to read files, inspect structure, and analyze existing patterns: `/init-agents-file` (inspects repo structure and stack), `/sdd` (context discovery and codebase inspection), and `/changes` (implementation validation against the spec).
 
 ## Terraform
 
@@ -1132,11 +1133,16 @@ This file is loaded automatically by Terraform (no `-var-file` flag needed). The
 #### `terraform/README.md`
 
 The README should document:
-- prerequisites (Terraform >= 1.5, GitHub PAT with `repo` and `administration` scopes);
+- prerequisites (Terraform >= 1.5, GitHub PAT);
 - quick start (`export GITHUB_TOKEN`, `terraform init`, `terraform apply`);
 - variable reference tables for `repository_name` and `branch_protection` with types and descriptions;
 - authentication section explaining that `GITHUB_TOKEN` env var is used;
-- environment-specific configs using separate `.tfvars` files.
+- environment-specific configs using separate `.tfvars` files;
+- **how to create a GitHub token**: go to GitHub Settings → Developer settings → Personal access tokens → Fine-grained tokens. Click "Generate new token". Set the repository access to "Only select repositories" and choose the target repository. Under "Permissions", set **Administration** to **Read and write** (required to manage rulesets) and **Metadata** to **Read-only** (auto-granted for selected repos). The token does not need any other permissions - `repo` scope is not required for fine-grained tokens targeting a single repository for ruleset management alone;
+- **required repository role**: the user running `terraform apply` must have at least **Write** access to the repository (to read repository metadata and manage rulesets). **Admin** access is required if bypass actors include `RepositoryRole = 5` (repository admins), because only admins can manage the admin role in the ruleset configuration.
+
+  > [!TIP]
+  > If unsure, use a **Repository Admin** token. The terraform operation is read-only for repository data and write-only for the ruleset - it never modifies code or content.
 
 ### Authentication
 
@@ -1357,6 +1363,7 @@ The existing `.githooks/` protect skill files from prompt injection and tamperin
 - If the commit modifies a skill file in `skills/`, run the content validation tests (including the core workflow principles and Design TDD subskill file existence).
 - If the commit deletes `AGENTS.md`, warn and require explicit confirmation.
 - If the commit references `design-tdd.md` in a skill file, verify the file exists at `skills/sdd/design-tdd.md`. If missing, block the commit with an error.
+- Run the em-dash replacement script: `node tests/replace-em-dashes.js` on all staged `.md` files. This script scans every staged markdown file for em dashes (U+2014) and replaces them with regular dashes (U+002D). No override is provided — em dashes are never allowed in any `.md` file in this repository.
 
 **`pre-push`:**
 - Same checks as pre-commit.
@@ -1384,6 +1391,7 @@ tests/
 │   └── test_artifact_structure.js
 ├── terraform/               # Terraform invariant checks
 │   └── test_terraform_invariants.js
+├── replace-em-dashes.js     # Utility script: replaces U+2014 with U+002D in .md files. Used by pre-commit hook
 ├── package.json             # Dependencies (vitest, glob, etc.)
 └── README.md                # How to run tests
 ```
@@ -1587,12 +1595,12 @@ The README must include a **repository tree structure section** that explains ev
 
 For each skill, the README must explain what the skill does and provide a direct link to the generated skill file (e.g., `skills/init-agents-file/`, `skills/sdd/`, `skills/changes/`) so users can inspect the implementation directly.
 
-For each skill, the README must also include a Mermaid flowchart diagram illustrating the skill's workflow. These diagrams must use the same style configuration as the SDD skill (`theme: default`, `look: handDrawn`, `layout: dagre`) and include color styling for better readability. All diagrams should apply a consistent color palette using Mermaid class definitions.
+For each skill, the README must also include a Mermaid flowchart diagram illustrating the skill's workflow. These diagrams must use the same style configuration as the SDD skill (`theme: default`, `look: handDrawn`, `layout: dagre`, `themeCSS: svg { background: white !important; }`) and include color styling for better readability. All diagrams should apply a consistent color palette using Mermaid class definitions.
 
 **/init-agents-file workflow:**
 
 ```mermaid
-%%{init: {'theme': 'default', 'look': 'handDrawn', 'layout': 'dagre'} }%%
+%%{init: {'theme': 'default', 'look': 'handDrawn', 'layout': 'dagre', 'themeCSS': 'svg { background: white !important; }'} }%%
 flowchart TD
     classDef start fill:#CEEAD6,color:#1a3a15,stroke:#8fbf9a,stroke-width:2px
     classDef process fill:#D2E3FC,color:#0f2440,stroke:#8fb0e0,stroke-width:2px
@@ -1616,7 +1624,7 @@ flowchart TD
 **/sdd workflow:**
 
 ```mermaid
-%%{init: {'theme': 'default', 'look': 'handDrawn', 'layout': 'dagre'} }%%
+%%{init: {'theme': 'default', 'look': 'handDrawn', 'layout': 'dagre', 'themeCSS': 'svg { background: white !important; }'} }%%
 flowchart TD
     classDef start fill:#CEEAD6,color:#1a3a15,stroke:#8fbf9a,stroke-width:2px
     classDef process fill:#D2E3FC,color:#0f2440,stroke:#8fb0e0,stroke-width:2px
@@ -1650,7 +1658,7 @@ flowchart TD
 **/changes workflow:**
 
 ```mermaid
-%%{init: {'theme': 'default', 'look': 'handDrawn', 'layout': 'dagre'} }%%
+%%{init: {'theme': 'default', 'look': 'handDrawn', 'layout': 'dagre', 'themeCSS': 'svg { background: white !important; }'} }%%
 flowchart TD
     classDef start fill:#CEEAD6,color:#1a3a15,stroke:#8fbf9a,stroke-width:2px
     classDef process fill:#D2E3FC,color:#0f2440,stroke:#8fb0e0,stroke-width:2px
@@ -1856,21 +1864,20 @@ The workflow lives in `.github/workflows/release.yml` at the repository root. It
 
 To mitigate this, the repository must include **git hooks** that enforce the integrity of the skills. Only repository owners can merge to `master`, so the master branch is always reviewed and hook-validated. However, if you install from a non-master commit hash, those protections don't apply - review the hash source carefully before using it.
 
-To mitigate this, the repository must include **git hooks** that enforce the integrity of the skills:
+The pre-commit and pre-push hooks are defined in the [Testing & Validation](#testing--validation) section above. They cover both structural integrity (skill validation, section completeness, unauthorized file detection) and security (prompt injection prevention, tool hijacking detection). The section below summarises the security-specific concerns that those hooks enforce:
 
 **Pre-commit hook** - Before every commit, the hook must:
-- Run `skills-ref validate ./my-skill` on every skill directory in `skills/` to validate SKILL.md frontmatter and naming conventions using the [skills-ref](https://github.com/agentskills/agentskills/tree/main/skills-ref) reference library.
-- Run the full test suite (`tests/run.sh`). If any test fails, block the commit.
+- Run `skills-ref validate ./my-skill` on every skill directory in `skills/` to validate SKILL.md frontmatter and naming conventions using the [skills-ref](https://github.com/agentskills/agentskills/tree/main/skills-ref) reference library (already defined in Testing & Validation).
+- Run the full test suite via `npm test` (see [Testing & Validation](#testing--validation)). If any test fails, block the commit.
 - Verify that the skill files (`skills/init-agents-file/`, `skills/sdd/`, `skills/changes/`) have not been modified in ways that deviate from the standard intent defined in this specification.
 - Detect additions of new tools or commands that are not part of the original skill definitions.
 - Flag any prompt changes that appear to inject unauthorized instructions, redirect agent behaviour or exfiltrate data.
-- If the commit contains a `changes.md` file, verify that a `spec.md` exists in the same directory. If not, warn the user that changes without a corresponding specification violate the workflow.
 - Block the commit if any check fails, with a clear error message explaining what was detected.
 
 **Pre-push hook** - Before every push to any branch (especially `master`), the hook must:
-- Run the same checks as the pre-commit hook.
+- Run the same checks as the pre-commit hook defined above and in [Testing & Validation](#testing--validation).
 - Additionally verify that no new files have been added to the `skills/` directory that were not part of the original repository structure.
-- Additionally verify that no `changes.md` is being pushed without a sibling `spec.md` in the same directory. This is the same check as pre-commit but enforced at push time to catch cases where the pre-commit hook was bypassed.
+- Additionally verify that no `changes.md` is being pushed without a sibling `spec.md` in the same directory (already enforced by the pre-commit hook in Testing & Validation, but enforced again at push time to catch bypasses).
 - Block the push if any integrity check fails.
 
 The hooks should be located in the repository's `.githooks/` directory and activated via `git config core.hooksPath .githooks/`. The README must document how to enable these hooks and why they exist.
