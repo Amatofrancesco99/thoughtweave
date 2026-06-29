@@ -2,23 +2,21 @@
 
 ```
 thoughtweave/
-├── AGENTS.md                # Agent instructions for contributing via coding agent
-├── CLAUDE.md                # Symlink to AGENTS.md (for Claude compatibility)
-├── IDEA.md                  # Concept, vision, philosophy. Start here.
-├── README.md                # Main documentation, installation, workflow guide
-├── REPO_STRUCTURE.md        # This file - every folder and file explained
-├── CONTRIBUTING.md          # Contributor guide: workflow, tests, branch strategy
-├── LICENSE                  # MIT License
-├── .gitignore               # Ignores system files, dependencies, skill cache, and logs
-│
+├── .github/                 # GitHub Actions workflows
+│   └── workflows/
+│       └── release.yml      # Auto-release on push to master
 ├── .githooks/               # Security hooks for skill file + workflow integrity
 │   ├── pre-commit           # Blocks commits with unauthorized/invalid skill changes; validates spec/changes sections; runs tests
 │   └── pre-push             # Same as pre-commit, plus enforces spec/changes pairing
-│
-├── tests/                   # Test suite: structural, content, compliance, artifact validation (Node.js with vitest)
-│   └── package.json
-│
+├── docs/                    # Additional documentation (future)
+│   └── (future)
+├── examples/                # Usage examples for different agents
+│   └── (future)
 ├── skills/                  # The `thoughtweave` skills (current + future additions)
+│   │
+│   ├── changes/             # Post-implementation documentation
+│   │   ├── SKILL.md         # Metadata + instructions
+│   │   └── ...              # Optional: scripts/, references/, assets/
 │   │
 │   ├── init-agents-file/    # Generate and maintain AGENTS.md
 │   │   ├── SKILL.md         # Metadata + instructions
@@ -29,54 +27,45 @@ thoughtweave/
 │   │   ├── design-tdd.md    # Design TDD subskill
 │   │   └── ...              # Optional: scripts/, references/, assets/
 │   │
-│   ├── changes/             # Post-implementation documentation
-│   │   ├── SKILL.md         # Metadata + instructions
-│   │   └── ...              # Optional: scripts/, references/, assets/
-│   │
 │   └── <new>/               # Future skills go here
 │
 ├── specs/                   # Engineering memory - all specifications
 │   │
 │   ├── 0-thoughtweave-def/    # The specification for `thoughtweave` itself
-│   │   ├── spec.md            # Authoritative specification
-│   │   └── changes.md         # Bootstrap changes document
+│   │   ├── changes.md         # Bootstrap changes document
+│   │   └── spec.md            # Authoritative specification
 │   │
 │   └── example/             # Example spec (placeholder for demo)
-│       ├── spec.md
-│       └── changes.md
+│       ├── changes.md
+│       ├── draft.md         # Optional raw scratch notes
+│       └── spec.md
 │
-├── examples/                # Usage examples for different agents
-│   └── (future)
+├── terraform/               # Infrastructure as Code
+│   ├── github/              # Child module: GitHub resource definitions
+│   │   ├── main.tf          # github_repository + github_repository_ruleset
+│   │   ├── providers.tf     # Provider config (integrations/github)
+│   │   └── variables.tf     # Module variables (repository, branch_protection)
+│   ├── main.tf              # Root variables + module call to github
+│   ├── README.md            # Usage, configuration, and apply instructions
+│   └── terraform.tfvars     # Auto-loaded default values
 │
-├── docs/                    # Additional documentation (future)
-│   └── (future)
-│
-└── .github/                 # GitHub Actions workflows
-    └── workflows/
-        └── release.yml      # Auto-release on push to master
+├── tests/                   # Test suite: structural, content, compliance, artifact validation (Node.js with vitest)
+│   └── package.json
+├── .gitignore               # Ignores system files, dependencies, skill cache, and logs
+├── AGENTS.md                # Agent instructions for contributing via coding agent
+├── CLAUDE.md                # Symlink to AGENTS.md (for Claude compatibility)
+├── CONTRIBUTING.md          # Contributor guide: workflow, tests, branch strategy
+├── IDEA.md                  # Concept, vision, philosophy. Start here.
+├── LICENSE                  # MIT License
+├── README.md                # Main documentation, installation, workflow guide
+└── REPO_STRUCTURE.md        # This file - every folder and file explained
 ```
 
 ## File Descriptions
 
-### Root Files
+### [`.github/`](./.github/) (CI/CD)
 
-- **[`AGENTS.md`](./AGENTS.md)** - Agent instructions for contributing to this repository using a coding agent. Read by coding agents when a contributor starts a session. Describes the repo structure, the skills, the test workflow, and how to make changes correctly.
-
-- **[`CLAUDE.md`](./CLAUDE.md)** - Symlink to `AGENTS.md` for Claude compatibility. Ensures Claude reads the same instructions without duplicating content.
-
-- **[`IDEA.md`](./IDEA.md)** - The concept document. Raw, honest, gut-feeling vision. Explains the origins, philosophy, what `thoughtweave` is and isn't, and why this approach exists. Read this first if you want to understand the *why*.
-
-- **[`README.md`](./README.md)** - The main documentation entry point. Contains the ASCII art header, TL;DR, manifesto, installation instructions, workflow guide, comparison table, Mermaid diagrams for each skill, usage examples, and versioning. Read this if you want to understand *how to use* the skills.
-
-- **[`REPO_STRUCTURE.md`](./REPO_STRUCTURE.md)** - This file. A navigational reference for the repository layout. Read this if you want to find your way around.
-
-- **[`CONTRIBUTING.md`](./CONTRIBUTING.md)** - Guide for contributors. Explains branch strategy, how to run tests, the PR workflow, and how to use the skills to help you contribute. Git hooks automatically invoke the test suite on commit. Should use GitHub alert tags to highlight mandatory rules, security precautions, best practices, and contextual notes. Read this before opening a PR.
-
-- **[`LICENSE`](./LICENSE)** - MIT License. Do what you want with this code.
-
-### [`.gitignore`](./.gitignore)
-
-Ignores system files (`.DS_Store`), npm dependencies (`node_modules/`), skill cache (`.skills/`), and log files (`*.log`).
+- **[`.github/workflows/release.yml`](./.github/workflows/release.yml)** - GitHub Actions workflow that creates a new release when code is pushed to `master` only (no other branch triggers a version bump). Reads the latest git tag, increments the version, creates a new tag, and publishes a GitHub Release with auto-generated notes from conventional commits.
 
 ### [`.githooks/`](./.githooks/) (Security)
 
@@ -88,13 +77,20 @@ Activate via: `git config core.hooksPath .githooks/`
 - **[`pre-commit`](./.githooks/pre-commit)** - Verifies skill files haven't been modified with unauthorized tools, injected instructions, or behaviour redirection. Validates that `spec.md` and `changes.md` contain all required sections. Warns if `AGENTS.md` is deleted. If modifying skill files, runs content validation tests. If `design-tdd.md` is referenced in a skill, verifies the file exists at `skills/sdd/design-tdd.md`. Runs the test suite. Also runs `skills-ref validate ./my-skill` (from the [skills-ref](https://github.com/agentskills/agentskills/tree/main/skills-ref) reference library) on every skill directory to check SKILL.md frontmatter and naming conventions.
 - **[`pre-push`](./.githooks/pre-push)** - Same checks as pre-commit, plus verifies no new files were added to `skills/` outside the known structure, and that `changes.md` files are never pushed without their sibling `spec.md`.
 
-### [`tests/`](./tests/) (Validation)
+### [`docs/`](./docs/) (Future)
 
-Tests validate the repository structure, skill content integrity, philosophical boundaries, and artifact schema. Since skills are plain markdown for LLMs (not executable code), tests perform structural and content pattern checks rather than functional execution. All tests use Node.js with `vitest` - no shell scripts or Python. Runnable via `npm test`. See `spec.md` for the full list of test files and their validation rules.
+Placeholder for additional documentation.
+
+### [`examples/`](./examples/) (Future)
+
+Placeholder for future usage examples.
 
 ### [`skills/`](./skills/) (The Core)
 
 Currently three skills covering the lifecycle of a software change. More will be added over time as the workflow evolves. Each is a markdown file that a coding agent reads and executes when invoked via `/command`.
+
+- **[`changes/`](./skills/changes/)** - `/changes` - Generates `changes.md` after implementation. Documents why the change happened, what changed technically, runtime impact, tests performed, and a narrative summary. Validates implementation maps back to spec requirements (flags unimplemented and untracked items). Runs a vulnerability scan on the implemented code before generating the document - finds insecure patterns, hardcoded secrets, vulnerable dependencies - studies each finding, fixes iteratively, and documents everything in the output. Includes **Mermaid diagrams** with consistent styling to visually map changes. Inherits output location from the originating spec. Validates all sections are present.
+  - **[`SKILL.md`](./skills/changes/SKILL.md)**
 
 - **[`init-agents-file/`](./skills/init-agents-file/)** - `/init-agents-file` - Generates and maintains `AGENTS.md`. Branching logic: if repo is empty, proposes standard best practices; if repo exists, inspects codebase (structure, stack) then conducts a sequential interview (one question at a time). The generated `AGENTS.md` includes a workflow checklist that mandates vulnerability scanning after implementation. Configurable areas presented as multiple selection (security, safety, maintainability, readability, simplicity, testing, architecture, OOP principles, GoF patterns, coding style, technology stack, operational domain, repo-specific constraints). Supports Claude via `CLAUDE.md` symlink. Validates all required sections are present.
   - **[`SKILL.md`](./skills/init-agents-file/SKILL.md)**
@@ -103,22 +99,19 @@ Currently three skills covering the lifecycle of a software change. More will be
   - **[`SKILL.md`](./skills/sdd/SKILL.md)** - The main SDD skill. Includes the Design TDD subskill as a nested step.
   - **[`design-tdd.md`](./skills/sdd/design-tdd.md)** - Design TDD subskill: after drafting requirements, the agent asks permission then designs test cases using Given-When-Then for each requirement (happy path, error states, edge cases, integration boundaries). If a requirement cannot be tested, it is flagged as incomplete. The resulting tests validate the spec before any code is written.
 
-- **[`changes/`](./skills/changes/)** - `/changes` - Generates `changes.md` after implementation. Documents why the change happened, what changed technically, runtime impact, tests performed, and a narrative summary. Validates implementation maps back to spec requirements (flags unimplemented and untracked items). Runs a vulnerability scan on the implemented code before generating the document - finds insecure patterns, hardcoded secrets, vulnerable dependencies - studies each finding, fixes iteratively, and documents everything in the output. Includes **Mermaid diagrams** with consistent styling to visually map changes. Inherits output location from the originating spec. Validates all sections are present.
-  - **[`SKILL.md`](./skills/changes/SKILL.md)**
-
 ### [`specs/`](./specs/) (Engineering Memory)
 
 > [!NOTE]
 > The permanent record of all specifications created by the SDD skill. Not temporary artifacts - they remain in the repository as documentation, context for future specs, and a record of decisions made.
 
 - **[`0-thoughtweave-def/`](./specs/0-thoughtweave-def/)** - The specification for `thoughtweave` itself
-  - **[`spec.md`](./specs/0-thoughtweave-def/spec.md)** - Authoritative specification
   - **[`changes.md`](./specs/0-thoughtweave-def/changes.md)** - Bootstrap changes document
+  - **[`spec.md`](./specs/0-thoughtweave-def/spec.md)** - Authoritative specification
 
 - **[`example/`](./specs/example/)** - Example spec (placeholder for demo)
-  - **[`spec.md`](./specs/example/spec.md)**
   - **[`changes.md`](./specs/example/changes.md)**
   - **[`draft.md`](./specs/example/draft.md)** (*optional*) - Raw scratch notes, brainstorming output, half-formed ideas that preceded the spec. Not validated, not required. Preserves the original intent so future readers can compare what was asked against what was generated after deep specification generation process.
+  - **[`spec.md`](./specs/example/spec.md)**
 
 Default structure per feature:
 ```
@@ -128,11 +121,44 @@ specs/
     └── changes.md    # Outcome, trade-offs, hidden assumptions discovered
 ```
 
-### [`examples/`](./examples/) and [`docs/`](./docs/)
+### [`terraform/`](./terraform/) (Infrastructure as Code)
 
-- **[`examples/`](./examples/)** - Placeholder for future usage examples
-- **[`docs/`](./docs/)** - Placeholder for additional documentation
+This directory is not checked into the repository - it is created on the fly by a coding agent following the [Terraform section of the specification](specs/0-thoughtweave-def/spec.md#terraform). When you ask a coding agent to implement that part of the spec, it will generate the exact folder structure and files documented there.
 
-### [`.github/`](./.github/) (CI/CD)
+What this configuration does, in plain English: it lets you own and manage this very repository through Terraform. Instead of clicking through GitHub's UI to set up the repo, enable issues, and lock down the master branch, you run `terraform apply` with your GitHub token and it all happens automatically.
 
-- **[`.github/workflows/release.yml`](./.github/workflows/release.yml)** - GitHub Actions workflow that creates a new release when code is pushed to `master` only (no other branch triggers a version bump). Reads the latest git tag, increments the version, creates a new tag, and publishes a GitHub Release with auto-generated notes from conventional commits.
+The most important piece is the **branch protection ruleset**. It enforces that:
+
+- Nobody can push directly to the default branch - every change must go through a pull request with at least one approving review.
+- Nobody can force-push or delete the default branch - history stays immutable.
+- Repository admins can still bypass these rules when needed (e.g., emergency hotfixes) because they're configured as bypass actors with role ID 5.
+
+This mirrors the security model described in [IDEA.md](IDEA.md): only repository owners merge to master, and every merge is reviewed. Before this ruleset existed, the only protection was the git hooks in `.githooks/` - which are client-side and can be skipped with `--no-verify`. The Terraform ruleset adds a **server-side enforcement** that cannot be bypassed locally.
+
+The provider reads your `GITHUB_TOKEN` environment variable - no secrets are stored in the repository. State is kept local and excluded from git via `.gitignore`.
+
+See the [Terraform section in the spec](specs/0-thoughtweave-def/spec.md#terraform) for the full file contents and variable reference.
+
+### [`tests/`](./tests/) (Validation)
+
+Tests validate the repository structure, skill content integrity, philosophical boundaries, and artifact schema. Since skills are plain markdown for LLMs (not executable code), tests perform structural and content pattern checks rather than functional execution. All tests use Node.js with `vitest` - no shell scripts or Python. Runnable via `npm test`. See `spec.md` for the full list of test files and their validation rules.
+
+### [`.gitignore`](./.gitignore)
+
+Ignores system files (`.DS_Store`), npm dependencies (`node_modules/`), skill cache (`.skills/`), terraform local cache (`.terraform/`), terraform state files (`*.tfstate`, `*.tfstate.*`), and log files (`*.log`). The terraform entries are present so local state files are never committed if a contributor runs `terraform apply` locally.
+
+### Root Files
+
+- **[`AGENTS.md`](./AGENTS.md)** - Agent instructions for contributing to this repository using a coding agent. Read by coding agents when a contributor starts a session. Describes the repo structure, the skills, the test workflow, and how to make changes correctly.
+
+- **[`CLAUDE.md`](./CLAUDE.md)** - Symlink to `AGENTS.md` for Claude compatibility. Ensures Claude reads the same instructions without duplicating content.
+
+- **[`CONTRIBUTING.md`](./CONTRIBUTING.md)** - Guide for contributors. Explains branch strategy, how to run tests, the PR workflow, and how to use the skills to help you contribute. Git hooks automatically invoke the test suite on commit. Should use GitHub alert tags to highlight mandatory rules, security precautions, best practices, and contextual notes. Read this before opening a PR.
+
+- **[`IDEA.md`](./IDEA.md)** - The concept document. Raw, honest, gut-feeling vision. Explains the origins, philosophy, what `thoughtweave` is and isn't, and why this approach exists. Read this first if you want to understand the *why*.
+
+- **[`LICENSE`](./LICENSE)** - MIT License. Do what you want with this code.
+
+- **[`README.md`](./README.md)** - Main documentation, installation, workflow guide. Contains ASCII art header, TL;DR, manifesto, installation instructions, workflow guide, comparison table, Mermaid diagrams for each skill, usage examples, and versioning. Read this if you want to understand *how to use* the skills.
+
+- **[`REPO_STRUCTURE.md`](./REPO_STRUCTURE.md)** - This file. A navigational reference for the repository layout. Read this if you want to find your way around.
