@@ -5,9 +5,6 @@
 - [Meaning](#meaning)
 - [Objective](#objective)
 - [Core Philosophy](#core-philosophy)
-  - [Intent First](#intent-first)
-  - [Slow Thinking Over Fast Guessing](#slow-thinking-over-fast-guessing)
-  - [Engineering Is Thinking](#engineering-is-thinking)
 - [Repository Structure](#repository-structure)
 - [`CONTRIBUTING.md` Structure](#contributingmd-structure)
 - [`/init-agents-file`](#init-agents-file)
@@ -18,10 +15,7 @@
 - [Testing & Validation](#testing--validation)
 - [Recommended Workflow](#recommended-workflow)
 - [Jira Integration](#jira-integration)
-- [README Generation](#readme-generation)
-- [Repository Security & Git Hooks](#repository-security--git-hooks)
-- [License](#license)
-- [Message To Preserve](#message-to-preserve)
+- [Readme Generation](#readme-generation)
 
 ## Meaning
 
@@ -121,11 +115,11 @@ Before discussing architecture, frameworks, implementation details or technologi
 
 The repository encourages developers and coding agents to ask:
 
-- Why are we doing this? What is the actual motivation behind this change? Is it a real requirement or an assumption?
-- Which problem are we trying to solve? Can we state it in one sentence without mentioning any technology?
-- Is this the right solution? Are there alternative approaches that might be simpler, cheaper or more maintainable?
-- Which constraints exist? What are the boundaries within which we must operate?
-- Which trade-offs are acceptable? Every decision involves trade-offs. Which ones are we willing to accept?
+- *Why are we doing this? What is the actual motivation behind this change? Is it a real requirement or an assumption?*
+- *Which problem are we trying to solve? Can we state it in one sentence without mentioning any technology?*
+- *Is this the right solution? Are there alternative approaches that might be simpler, cheaper or more maintainable?*
+- *Which constraints exist? What are the boundaries within which we must operate?*
+- *Which trade-offs are acceptable? Every decision involves trade-offs. Which ones are we willing to accept?*
 
 A good specification starts with understanding. If the specification does not clearly explain why something exists, then the implementation will be built on an unclear foundation.
 
@@ -289,13 +283,14 @@ Explain the branch protection model. Include a clear statement that:
 
 #### Local Development Setup
 
-Explain how to enable git hooks, install dependencies, and run the test suite:
+Explain how to enable git hooks and install dependencies:
 
 ```shell
 npm install
 git config core.hooksPath .githooks/
-npm test
 ```
+
+Tests are executed automatically by git hooks on every commit and push - no manual `npm test` needed.
 
 #### PR Workflow
 
@@ -303,10 +298,16 @@ Describe the expected workflow for pull requests:
 
 1. Create a feature branch from the default branch.
 2. Make your changes. If the change is significant, consider using `/sdd` and `/changes` to document it.
-3. Run the test suite locally (`npm test`).
+3. Git hooks will run tests automatically on commit. Ensure all checks pass before pushing.
 4. Open a pull request against the default branch.
 5. Address review feedback. New commits on the feature branch dismiss stale reviews.
 6. Once approved and all checks pass, an admin merges the PR.
+
+#### Versioning & Releases
+
+Explain that when code is merged to `master` (via PR), a GitHub Actions workflow (`.github/workflows/release.yml`) runs automatically: it reads the latest git tag, increments the version (semver), creates a new tag, and publishes a GitHub Release with auto-generated notes. Pushes to any other branch never trigger a release.
+
+This means contributors don't need to manage versions manually - versioning is fully automated on merge to `master`. Users install specific versions via `npx skills add <repository>@v<tag>`.
 
 #### What Needs Contributors
 
@@ -368,7 +369,7 @@ The skill should progressively ask questions rather than presenting a large ques
 
 The skill should check whether an `AGENTS.md` already exists in the repository before proceeding:
 - If `AGENTS.md` exists, the skill should report its current state (file size, last modified date if available) and ask the user whether they want to regenerate it from scratch, update specific areas, or skip.
-- If multiple `AGENTS.md`-like files exist (e.g., `CLAUDE.md`, `.cursorrules`), detect them and ask which one to update.
+- If `CLAUDE.md` exists as a regular file (not a symlink), the skill must replace it with a symlink pointing to `AGENTS.md`. `AGENTS.md` is always the main file - `CLAUDE.md` is kept as a symlink for Claude compatibility.
 
 This check exists to prevent accidental overwrites of a previously configured file. It should always run before the [Behaviour section](#behaviour) logic.
 
@@ -396,6 +397,7 @@ Each area represents a dimension of engineering practice that the `AGENTS.md` fi
 - **technology stack** - languages, frameworks, libraries, versions, compatibility requirements;
 - **operational domain** - the business or technical domain (fintech, healthcare, e-commerce, etc.) and its specific regulations, terminology, and constraints;
 - **repository-specific constraints** - any additional rules that apply specifically to this project.
+- **extras** - additional configurable sub-areas presented as a nested multi-selection when this item is selected. The skill should prompt the user to pick which extras to configure from a sub-list. Extras may include: pre-commit hook configuration, CI/CD pipeline preferences, release strategy, dependency management policies, code review checklist, or any other relevant practice not covered by the main areas above.
 
 ### Mandatory Principle
 
@@ -415,17 +417,115 @@ The generated file should contain the following sections. Each section serves a 
 - **Engineering Best Practices** - coding standards, testing requirements and quality expectations.
 - **Workflow Checklist** - the steps that agents should follow when implementing changes. This checklist must always include a step that requires the agent to ask: *"Is this the best way to respect the constraints, requirements and best practices defined by the user?"* For every implementation decision, the agent must self-evaluate whether it is respecting the project's documented constraints rather than blindly generating code. The checklist must also include a **vulnerability scanning step**: after implementation, the agent should scan the produced code for vulnerabilities (dependency issues, insecure patterns, exposed secrets), study each finding, and propose fixes iteratively until the code passes.
 
-The generated `AGENTS.md` should also use GitHub alert tags (`> [!IMPORTANT]`, `> [!WARNING]`, `> [!TIP]`, `> [!NOTE]`) to highlight mandatory rules, security-critical constraints, best practices, and contextual notes. Use sparingly - 2-3 per document maximum.
+> The generated `AGENTS.md` should also use GitHub alert tags (`> [!IMPORTANT]`, `> [!WARNING]`, `> [!TIP]`, `> [!NOTE]`) to highlight mandatory rules, security-critical constraints, best practices, and contextual notes.
 
 ### Claude Compatibility
 
-If the repository uses Claude as a coding agent, the skill should create a `CLAUDE.md` file that is a symbolic link (symlink) to `AGENTS.md`. This ensures that Claude reads the same instructions without duplicating content. The skill should handle the creation of the symlink automatically and notify the user.
+If the repository uses Claude as a coding agent, the skill must ensure `CLAUDE.md` is a symbolic link (symlink) to `AGENTS.md` - if `CLAUDE.md` exists as a regular file, replace it with a symlink. This ensures Claude reads the same instructions without duplicating content. The skill should handle this automatically and notify the user.
 
 This repository itself follows this practice - `CLAUDE.md` is a symlink to `AGENTS.md` at the root level. When contributing with Claude, the agent reads the same instructions as any other contributor.
 
 ### Validation
 
 The skill must validate that the generated `AGENTS.md` contains all the sections listed above. If any section is missing, the skill must warn the user and request confirmation that the omission is intentional. This prevents the skill from generating an incomplete file without the user noticing.
+
+### Workflow
+
+```mermaid
+%%{init: { "theme": "base", "look": "handDrawn", "layout": "dagre" }}%%
+flowchart TD
+    subgraph bg[" "]
+    direction TB
+    classDef start fill:#CEEAD6,color:#1a3a15,stroke:#8fbf9a,stroke-width:2px
+    classDef process fill:#D2E3FC,color:#0f2440,stroke:#8fb0e0,stroke-width:2px
+    classDef decision fill:#FEEFC3,color:#4d2e0f,stroke:#d4c48a,stroke-width:2px
+    classDef endclass fill:#FAD2CF,color:#3a1a1a,stroke:#d4a8a3,stroke-width:2px
+
+    A[Start /init-agents-file]:::start --> B{AGENTS.md exists?}:::decision
+    B -->|Yes| C[Report current state]:::process
+    C --> D{Regenerate, update, or skip?}:::decision
+    B -->|No| E{Run from scratch}:::process
+    D -->|Skip| F[End]:::endclass
+    D -->|Regenerate/update| E
+    E --> G{CLAUDE.md exists as regular file?}:::decision
+    G -->|Yes| H[Will replace with symlink to AGENTS.md]:::process
+    G -->|No| I[No action needed on CLAUDE.md]:::process
+    H --> J{Repository is empty?}:::decision
+    I --> J
+    J -->|Yes| K[Propose standard best practices from scratch]:::process
+    J -->|No| L[Inspect existing codebase for context]:::process
+    K --> M[Show configurable areas as multi-select]:::process
+    L --> M
+    M --> N[User picks areas to configure]:::process
+    N --> O[Sequential interview - one question at a time]:::process
+    O --> P[Generate AGENTS.md with all required sections]:::process
+    P --> Q{CLAUDE.md needs symlink?}:::decision
+    Q -->|Yes| R[Create/replace CLAUDE.md as symlink]:::process
+    Q -->|No| S[Validate all sections present]:::process
+    R --> S
+    S -->|Pass| T[End /init-agents-file]:::endclass
+    S -->|Fail| U[Warn user, request confirmation for omissions]:::process
+    U --> T
+    end
+```
+
+The workflow handles the following branches and cases:
+
+- **`AGENTS.md` exists**: reports state and offers regenerate/update/skip. Skip exits immediately.
+- **`AGENTS.md` missing**: proceeds directly to generation flow.
+- **`CLAUDE.md` exists as file (not symlink)**: flags it for symlink replacement after generation.
+- **Repository empty**: proposes best practices from scratch without codebase inspection.
+- **Repository non-empty**: inspects codebase for context (structure, stack, existing patterns).
+- **Configurable areas**: displayed as multi-select - user picks only what matters.
+- **Post-generation**: validates all required sections are present; warns on omissions but allows override.
+
+### This Repository's `AGENTS.md`
+
+This section defines the `AGENTS.md` content for the `thoughtweave` repository itself, following the `/init-agents-file` skill process described above. When generating or updating `AGENTS.md` for this repo, the coding agent must produce a file with the following content, structure, and constraints. `CLAUDE.md` must always be a symlink to `AGENTS.md`.
+
+**Domain:** Developer tooling - workflow automation and coding agent skills for structured, intent-driven software engineering. The repository provides reusable markdown skills that guide coding agents through specification, implementation, and documentation phases. Agents should be familiar with the thoughtweave philosophy: intent-first, slow thinking, surfacing hidden assumptions, engineering as understanding.
+
+**Repository Structure:**
+- `skills/init-agents-file/` - skill for generating and maintaining `AGENTS.md`
+- `skills/sdd/` - skill for creating implementation-ready specifications with test design
+- `skills/changes/` - skill for documenting implemented changes with vulnerability scanning
+- `skills/sdd/design-tdd.md` - subskill for designing Given-When-Then test cases during specification
+- `specs/` - permanent engineering memory, organized by feature in subdirectories
+- `terraform/` - Terraform configuration for GitHub branch protection ruleset
+- `tests/` - structural, content, compliance, artifact, githook, and terraform invariant tests
+- `.githooks/pre-commit` and `.githooks/pre-push` - integrity and security hooks
+- `AGENTS.md` - this file, the engineering contract for coding agents
+- `CLAUDE.md` - symlink to `AGENTS.md` for Claude compatibility
+
+**Architectural Directives:**
+- All skills are plain markdown files in `skills/<name>/SKILL.md` - no executables, no runtime dependencies.
+- Skills must be independently usable but designed to work together in sequence: `init-agents-file` → `sdd` → `changes`.
+- Every skill must include pre-condition checks and output validation as defined in this specification.
+- Skill output files (`AGENTS.md`, `spec.md`, `changes.md`) must use GitHub alert tags for scannability.
+- Mermaid diagrams must follow the defined style (theme: base, look: handDrawn, layout: dagre, subgraph wrap for dark mode, pastel palette).
+- No skill may generate implementation code - skills produce documentation and specifications only.
+- The `specs/` folder is permanent engineering memory - never delete a specification after implementation.
+
+**Engineering Best Practices:**
+- All tests are Node.js with `vitest` - no shell scripts or Python.
+- All tests run automatically via git hooks on every commit and push - no manual `npm test` needed.
+- Pre-commit hooks run: em-dash replacement, skills-ref validation, terraform fmt, section validation, content tests.
+- Terraform HCL files must be formatted with `terraform fmt -recursive`.
+- No em dashes (U+2014) allowed in any `.md` file - use regular dashes (U+002D) instead.
+- `.gitignore` must always include `node_modules/`, `.skills/`, `.terraform/`, `*.tfstate`, `*.tfstate.*`, `*.log`.
+- Vulnerability scanning is mandatory after any implementation before generating changes documentation.
+- `CLAUDE.md` must never be a regular file - it must be a symlink to `AGENTS.md` at all times.
+
+**Workflow Checklist:**
+When contributing to this repository, the agent must follow these steps in order:
+
+1. Read `IDEA.md` to understand the vision and philosophy of the project.
+2. Read this specification (`specs/0-thoughtweave-def/spec.md`) to understand the full structure, constraints, and testing expectations.
+3. Inspect existing implementations before introducing new ones - check `skills/`, `tests/`, and `specs/` for relevant patterns.
+4. If the change is significant, run `/sdd` to create a specification first, then implement, then run `/changes` to document the outcome.
+5. Self-evaluate: *"Is this the best way to respect the constraints, requirements and best practices defined by this specification and AGENTS.md?"*
+6. Git hooks will enforce all checks automatically on commit - ensure the commit succeeds without warnings.
+8. Scan the produced code for vulnerabilities, study each finding, and fix iteratively until the code is clean.
 
 ## `/sdd`
 
@@ -490,9 +590,11 @@ The skill must follow these behavioural rules when interacting with the user dur
 - Think independently. If the user's request seems unclear, risky, or suboptimal, raise your concern respectfully: *"I'm not sure that's the best approach - have you considered X instead?"*
 - Surface hidden assumptions explicitly and document them in the specification.
 - Ask one question at a time. Let the user answer before proceeding to the next question.
-- Study what you do not know. If a technology, constraint, or trade-off is unfamiliar, research it or ask clarifying questions before writing the spec.
+- Study what you do not know throughout the entire spec definition process. If a technology, constraint, or trade-off is unfamiliar at any point, offer to search the web, explain concepts, and study it together before proceeding. Weave problem exploration and technical study into the same conversation - never skip learning to move faster.
+- Design test cases (Given-When-Then) for each requirement after drafting it, covering happy path, error states, edge cases, and integration boundaries. Use the act of describing tests to validate that the requirements are complete and unambiguous.
 - Validate that all required sections are present in the generated output before considering the spec complete.
 - Only include Mermaid diagrams when they genuinely improve understanding. If text communicates the point more clearly, skip the diagram.
+- Wrap every Mermaid diagram inside a `subgraph` block (with empty title and `direction TB`) to ensure visibility in dark mode.
 
 **Do Not:**
 - Say "you are right", "that's correct", or "good point" without independently verifying the claim first. Agreement must be earned, not assumed.
@@ -621,6 +723,9 @@ For each decision and assumption, the following must be captured:
 > [!IMPORTANT]
 > This section is not optional. If the specification contains decisions (and every specification does), they must be documented here.
 
+> [!NOTE]
+> **Difference from `changes.md`**: The `spec.md` section documents **design-time** decisions, assumptions, and compromises - those made during planning, before any code is written. The `changes.md` documents **implementation-time** discoveries - decisions that deviated from the spec, assumptions that proved wrong during coding, and trade-offs forced by real-world constraints. The spec says "what we plan to do and why"; the changes document says "what actually happened and what we learned."
+
 #### Requirements & Best Practices
 
 Functional requirements, non-functional requirements and implementation guidance. Functional requirements describe what the system should do. Non-functional requirements describe how the system should behave (performance, security, scalability, etc.). Implementation guidance describes specific technical approaches that should be followed.
@@ -733,6 +838,63 @@ Colors may vary from the reference palette, but the style must remain consistent
 
 The skill must validate that the generated specification contains all sections listed in [Specification Structure](#specification-structure) above. If any section is missing, the skill must warn the user and request confirmation that the omission is intentional. This ensures that every specification is complete and that omissions are deliberate decisions rather than oversights.
 
+### Workflow
+
+```mermaid
+%%{init: { "theme": "base", "look": "handDrawn", "layout": "dagre" }}%%
+flowchart TD
+    subgraph bg[" "]
+    direction TB
+    classDef start fill:#CEEAD6,color:#1a3a15,stroke:#8fbf9a,stroke-width:2px
+    classDef process fill:#D2E3FC,color:#0f2440,stroke:#8fb0e0,stroke-width:2px
+    classDef decision fill:#FEEFC3,color:#4d2e0f,stroke:#d4c48a,stroke-width:2px
+    classDef phase fill:#F1F3F4,color:#2d2d2d,stroke:#c4c7c8,stroke-width:2px
+    classDef endclass fill:#FAD2CF,color:#3a1a1a,stroke:#d4a8a3,stroke-width:2px
+
+    A[Start /sdd]:::start --> B{AGENTS.md exists?}:::decision
+    B -->|No| C[Warn user, ask to run /init-agents-file or proceed]:::decision
+    B -->|Yes| D{Select mode: light or deep}:::decision
+    C -->|Proceed anyway| D
+    C -->|Run /init-agents-file| E[Exit to init-agents-file]:::endclass
+    D --> F[Ask 3 ordered questions]:::process
+    F --> F1[1. Inherit context from past 5 specs?]:::process
+    F1 --> F2[2. Output folder?]:::process
+    F2 --> F3[3. Search the web?]:::process
+    F3 --> G{Context inheritance?}:::decision
+    G -->|Yes| H[Inspect AGENTS.md, repo, past 5 specs, docs]:::process
+    G -->|No| I[Skip context inspection]:::process
+    H --> J{Web search?}:::decision
+    I --> J
+    J -->|Yes| K[Search best practices, docs, pitfalls]:::process
+    J -->|No| L[Skip web search]:::process
+    K --> M[Phase: Discovery]:::phase
+    L --> M
+    M --> N[Competency assessment per area]:::process
+    N --> O[Explore problem, challenge assumptions]:::process
+    O --> P{Technical gap emerged?}:::decision
+    P -->|Yes| Q[Study: search web, explain concepts]:::process
+    P -->|No| R[Design TDD - describe test cases]:::process
+    Q --> R
+    R --> S[Generate specification with all sections]:::process
+    S --> T{All sections present?}:::decision
+    T -->|Yes| U[Output spec to chosen folder]:::process
+    T -->|No| V[Warn user, confirm omissions]:::process
+    V --> U
+    U --> W[End /sdd]:::endclass
+    end
+```
+
+The workflow handles the following branches and cases:
+
+- **`AGENTS.md` missing**: warns the user and offers to run `/init-agents-file` first or proceed without it (flagged as risk in spec).
+- **Mode selection**: light mode (shallow discovery, skip technical deep-dives) vs deep mode (full Discovery with study).
+- **Context inheritance**: if enabled, inspects AGENTS.md, repo structure, past 5 specs, external docs. If disabled, skips.
+- **Web search**: if enabled, searches best practices and reports sources as clickable references. If disabled, skips.
+- **Competency assessment**: asks per-area familiarity (Expert/Comfortable/New) and adapts depth. In light mode, single summary question.
+- **Technical gaps**: if the user is unfamiliar with an area, the skill studies it (web search, explanations) before proceeding.
+- **Design TDD**: after drafting requirements, describes Given-When-Then tests. If user declines, flags as risk.
+- **Output validation**: checks all required sections exist. Missing sections trigger a warning with override.
+
 ## Specifications Folder
 
 The repository shall contain a dedicated `specs/` folder. This is not optional. The folder is a fundamental part of the workflow.
@@ -837,6 +999,7 @@ The skill must follow these behavioural rules when interacting with the user dur
 - Surface trade-offs accepted during implementation and alternatives that were considered.
 - Self-critique your own draft before presenting it to the user.
 - Only include Mermaid diagrams in the Workflow Diagram section when they genuinely improve understanding. If text communicates the point more clearly, skip the diagram.
+- Wrap every Mermaid diagram inside a `subgraph` block (with empty title and `direction TB`) to ensure visibility in dark mode.
 
 **Do Not:**
 - Say "everything looks good" or "the implementation matches the spec" without actually verifying each requirement and acceptance criterion first.
@@ -883,12 +1046,26 @@ Explanation targeted at non-technical stakeholders. This section should describe
 
 Technical deep dive covering end-to-end modifications. This section is for developers who need to understand exactly what was changed. It should describe:
 
-- which files were modified, added or deleted;
+- which files were modified, added or deleted - listed inside a collapsed `<details>` block with each file as a clickable link relative to the `changes.md` location;
 - how the architecture changed;
 - which APIs, interfaces or contracts were modified;
 - any database migrations, configuration changes or deployment considerations;
 - **decisions made during implementation** - why certain approaches were chosen, which alternatives were considered;
 - **hidden assumptions discovered** - implicit knowledge uncovered during implementation that future contributors need to be aware of.
+
+The file list must be rendered as:
+
+```markdown
+<details>
+<summary>Modified files (N)</summary>
+
+- [`../relative/path/to/file.js`](../relative/path/to/file.js) - brief note on what changed
+- [`../relative/path/to/file2.js`](../relative/path/to/file2.js) - brief note on what changed
+
+</details>
+```
+
+The paths must be relative to `changes.md` so the links work when browsing the repository.
 
 #### Tests
 
@@ -918,7 +1095,7 @@ Textual recap, long enough to provide a complete understanding of what was done 
 
 #### GitHub Alert Tags in Generated Changes
 
-The same [alert tag rules defined by the SDD skill](#github-alert-tags-in-generated-specs) apply. The changes document should use `> [!IMPORTANT]`, `> [!WARNING]`, `> [!CAUTION]`, `> [!TIP]`, and `> [!NOTE]` to highlight critical decisions, risks discovered during implementation, trade-offs, best practices, and contextual notes. Use sparingly - 2-3 per document maximum.
+The same [alert tag rules defined by the SDD skill](#github-alert-tags-in-generated-specs) apply. The changes document should use `> [!IMPORTANT]`, `> [!WARNING]`, `> [!CAUTION]`, `> [!TIP]`, and `> [!NOTE]` to highlight critical decisions, risks discovered during implementation, trade-offs, best practices, and contextual notes.
 
 ### Mermaid Diagrams
 
@@ -950,6 +1127,61 @@ Together they tell the complete story of a change - from the initial idea, throu
 > [!IMPORTANT]
 > For writing docs and features - and especially when incrementing an already-started codebase - the agent must have access to the repository and codebase. Without reading the existing code, it cannot understand conventions, module boundaries, or architectural decisions. All three skills depend on the agent's ability to read files, inspect structure, and analyze existing patterns: `/init-agents-file` (inspects repo structure and stack), `/sdd` (context discovery and codebase inspection), and `/changes` (implementation validation against the spec).
 
+### Workflow
+
+```mermaid
+%%{init: { "theme": "base", "look": "handDrawn", "layout": "dagre" }}%%
+flowchart TD
+    subgraph bg[" "]
+    direction TB
+    classDef start fill:#CEEAD6,color:#1a3a15,stroke:#8fbf9a,stroke-width:2px
+    classDef process fill:#D2E3FC,color:#0f2440,stroke:#8fb0e0,stroke-width:2px
+    classDef decision fill:#FEEFC3,color:#4d2e0f,stroke:#d4c48a,stroke-width:2px
+    classDef endclass fill:#FAD2CF,color:#3a1a1a,stroke:#d4a8a3,stroke-width:2px
+
+    A[Start /changes]:::start --> B{spec.md exists?}:::decision
+    B -->|No| C[Refuse to proceed - a spec is required]:::process
+    C --> D[End]:::endclass
+    B -->|Yes| E{spec.md is complete?}:::decision
+    E -->|No| F[Warn user, ask to complete spec or proceed]:::decision
+    E -->|Yes| G[Ask 2 ordered questions]:::process
+    F -->|Proceed anyway| G
+    F -->|Complete spec first| H[Exit to /sdd]:::endclass
+    G --> G1[1. Inherit context from past 5 specs?]:::process
+    G1 --> G2[2. Output folder? default: same as spec]:::process
+    G2 --> I[Read spec.md, extract requirements and decisions]:::process
+    I --> J[Inspect actual implementation changes]:::process
+    J --> K{All spec requirements addressed?}:::decision
+    K -->|No| L[Flag unimplemented requirements]:::process
+    K -->|Yes| M{Untracked behaviour found?}:::decision
+    L --> M
+    M -->|Yes| N[Flag untracked behaviour]:::process
+    M -->|No| O{Vulnerability scan}:::decision
+    N --> O
+    O --> P[Scan code for vulnerabilities]:::process
+    P --> Q{Vulnerabilities found?}:::decision
+    Q -->|Yes| R[Study each finding, propose fixes iteratively]:::process
+    Q -->|No| S[Document security posture]:::process
+    R --> S
+    S --> T[Generate changes.md with all sections]:::process
+    T --> U[Validate all sections present]:::process
+    U -->|Pass| V[Output changes.md to spec folder]:::process
+    U -->|Fail| W[Warn user, confirm omissions]:::process
+    W --> V
+    V --> X[End /changes]:::endclass
+    end
+```
+
+The workflow handles the following branches and cases:
+
+- **`spec.md` missing**: refuses to proceed - a changes document without a spec is meaningless.
+- **`spec.md` incomplete**: warns and offers to complete the spec first or proceed anyway (missing sections flagged).
+- **Context inheritance**: if enabled, inspects past 5 specs and repo structure. If disabled, skips.
+- **Unimplemented requirements**: spec items not found in implementation are flagged for the user.
+- **Untracked behaviour**: implementation changes not covered by the spec are flagged.
+- **Vulnerability scan**: scans implemented code; if issues found, studies and fixes iteratively until resolved or risk is accepted.
+- **Output validation**: checks all required sections exist. Missing sections trigger a warning with override.
+
 ## Terraform
 
 ### Purpose
@@ -968,7 +1200,7 @@ terraform/
 ├── main.tf                  # Root variables + module call to github
 ├── terraform.tfvars         # Auto-loaded default values (loaded automatically by Terraform)
 └── github/                  # Child module: GitHub resource definitions
-    ├── providers.tf          # Provider config (integrations/github ~> 6.5)
+    ├── providers.tf          # Provider config (terraform ~> 1.15, integrations/github ~> 6.5)
     ├── variables.tf          # Module variables (repository_name, branch_protection)
     └── main.tf               # data.github_repository + github_repository_ruleset
 ```
@@ -979,6 +1211,8 @@ terraform/
 
 ```hcl
 terraform {
+  required_version = "~> 1.15"
+  
   required_providers {
     github = {
       source  = "integrations/github"
@@ -1158,7 +1392,7 @@ This file is loaded automatically by Terraform (no `-var-file` flag needed). The
 #### `terraform/README.md`
 
 The README should document:
-- prerequisites (Terraform >= 1.5, GitHub PAT);
+- prerequisites (Terraform >= 1.15, GitHub PAT);
 - quick start (`export GITHUB_TOKEN`, `terraform init`, `terraform apply`);
 - variable reference tables for `repository_name` and `branch_protection` with types and descriptions;
 - authentication section explaining that `GITHUB_TOKEN` env var is used;
@@ -1255,7 +1489,15 @@ Verify the repository layout matches the specification. These tests run as Node.
 - No unexpected files exist in `skills/` (prevents unauthorized additions).
 - The `specs/` folder contains at least the example specs.
 - The `.githooks/` directory exists and contains `pre-commit` and `pre-push`.
-- `.gitignore` excludes system files, dependencies, skill cache, and logs by default.
+- `.gitignore` excludes system files, dependencies, skill cache, and logs by default - specifically `node_modules/`, `.skills/`, `.terraform/`, `*.tfstate`, `*.tfstate.*`, and `*.log`.
+- All test files in `tests/` exist at their expected paths (structural, content, compliance, artifacts, terraform, replace-em-dashes.js, package.json, README.md).
+
+#### Githook content tests
+
+Verify that the githook scripts contain the required checks defined in this specification:
+
+- `pre-commit` must contain: changes.md/spec.md sibling validation, spec.md section validation, changes.md section validation, `skills-ref validate` for modified skills, content validation tests for modified skills, `terraform fmt -recursive` for staged terraform files, AGENTS.md deletion warning, design-tdd.md existence check, em-dash replacement script execution.
+- `pre-push` must contain: all pre-commit checks, skills directory immutability check, changes.md without spec.md blocking, section validation for spec.md and changes.md.
 
 #### Content validation tests
 
@@ -1282,7 +1524,7 @@ Additionally, verify that the **core workflow principles** are present in each s
   - Web search integration - instructions to offer web search for technical details, report sources as clickable references in a References section.
   - Design TDD subskill: instructions to design test cases (Given-When-Then) after drafting requirements, covering happy path, error states, edge cases, and integration boundaries - using the tests to validate the spec itself.
   - Mermaid diagram configuration - theme: default, look: handDrawn, layout: dagre, pastel palette with specific class styling.
-  - GitHub alert tag usage rules - instructions to use `> [!IMPORTANT]`, `> [!WARNING]`, `> [!CAUTION]`, `> [!TIP]`, `> [!NOTE]` sparingly (2-3 per document maximum).
+  - GitHub alert tag usage rules - instructions to use `> [!IMPORTANT]`, `> [!WARNING]`, `> [!CAUTION]`, `> [!TIP]`, `> [!NOTE]`.
   - Output validation - instructions to verify all required sections are present before considering the spec complete.
 - **`changes`** must contain:
   - Instructions to document hidden assumptions discovered during implementation (not just decisions made).
@@ -1299,9 +1541,16 @@ Additionally, verify that the **core workflow principles** are present in each s
   - Distinction between auto-inferrable context (structure, stack) and must-ask context (conventions, philosophy, patterns).
   - Configurable areas presented as a multiple selection interface - the user chooses which areas to configure.
   - The mandatory principle: *"Inspect existing implementations before introducing new ones"* - this rule must appear verbatim or as a clear equivalent.
-  - Instructions to create `CLAUDE.md` as a symlink to `AGENTS.md` when Claude is detected.
+  - Instructions to ensure `CLAUDE.md` is a symlink to `AGENTS.md` - if it exists as a regular file, replace it with a symlink.
   - Output validation - instructions to verify all required sections are present.
   - Required AGENTS.md sections: Domain, Repository Structure, Architectural Directives, Engineering Best Practices, Workflow Checklist (with the self-evaluation step: *"Is this the best way to respect the constraints, requirements and best practices defined by the user?"*).
+  - A Workflow section with a Mermaid diagram and branch/case descriptions.
+
+- **`sdd`** must contain:
+  - A Workflow section with a Mermaid diagram and branch/case descriptions.
+
+- **`changes`** must contain:
+  - A Workflow section with a Mermaid diagram and branch/case descriptions.
 
 These tests parse the skill markdown and check for specific instruction patterns. They are not perfect (an LLM may interpret the same instruction differently) but they catch structural omissions - if the instruction is missing entirely, the test fails.
 
@@ -1346,7 +1595,7 @@ The `skills/sdd/design-tdd.md` file must exist whenever the SDD skill references
 
 Verify that the pre-condition checks defined in this specification are present in each skill:
 
-- **`init-agents-file`**: must contain logic to detect existing `AGENTS.md` and ask before overwriting.
+- **`init-agents-file`**: must contain logic to detect existing `AGENTS.md` and ask before overwriting. Must also contain logic to detect `CLAUDE.md` as a regular file and replace it with a symlink to `AGENTS.md`.
 - **`sdd`**: must contain logic to detect missing `AGENTS.md` and warn the user.
 - **`changes`**: must contain logic to detect missing `spec.md` and refuse to proceed.
 
@@ -1359,7 +1608,6 @@ Verify that generated output files follow the required structure. These tests us
 - `spec.md` must contain: Objective, Scope, Decisions & Compromises, Requirements & Best Practices, Tests, Acceptance Criteria, References (if web search was enabled and returned sources - the References section must list each source with title and clickable URL).
 - `changes.md` must contain: Why, Overview, Runtime Impact Summary, Changes, Tests, Workflow Diagram, Summary.
 - `AGENTS.md` must contain: Objective, Repository Structure, Architectural Directives, Engineering Best Practices, Workflow Checklist (with the self-evaluation step: *"Is this the best way to respect the constraints, requirements and best practices defined by the user?"*).
-- `AGENTS.md` must contain at least one GitHub alert tag (`> [!IMPORTANT]`, `> [!WARNING]`, `> [!CAUTION]`, `> [!TIP]`, or `> [!NOTE]`) but no more than three. Excessive alert tags dilute their impact.
 
 These tests can be run against the example files in `specs/example/` and any user-generated files.
 
@@ -1367,16 +1615,18 @@ These tests can be run against the example files in `specs/example/` and any use
 
 Verify that the Terraform module variables and ruleset configuration have not been modified from their defined specification. The `branch_protection` variable and its `rules` object are critical infrastructure guardrails - they define the security posture of the default branch and must not be altered accidentally or without explicit awareness.
 
-These tests parse the Terraform HCL files (`terraform/github/variables.tf`, `terraform/github/main.tf`, `terraform/main.tf`, `terraform/terraform.tfvars`) and verify:
+These tests parse the Terraform HCL files (`terraform/github/variables.tf`, `terraform/github/main.tf`, `terraform/main.tf`, `terraform/terraform.tfvars`) using plain Node.js `.js` scripts that read each file and assert on its content - no `terraform` binary, no shell commands, no additional dependencies beyond `node:fs` and `node:path`. They verify:
 
 - **Variable schema immutability**: The `branch_protection` variable in `terraform/github/variables.tf` must contain exactly the fields defined in the specification (creation, update, deletion, non_fast_forward, required_linear_history, pull_request with its nested fields). No new fields may be added and no existing fields may be removed without updating this specification.
 - **Ruleset defaults unchanged**: The default values for each rule in the `branch_protection.rules` object must match the values defined in this specification (see the [Ruleset Configuration Summary](#ruleset-configuration-summary) table). Any change to a default must be intentional and documented.
 - **Ruleset enforcement in main.tf**: The `github_repository_ruleset` resource in `terraform/github/main.tf` must reference `var.branch_protection.rules.*` fields - no rule may be hardcoded inline, bypassing the variable.
 - **Root module alignment**: The variable schema in `terraform/main.tf` (root module) must mirror the child module's schema in `terraform/github/variables.tf`. Any divergence is a bug.
 - **tfvars consistency**: The values in `terraform/terraform.tfvars` must be valid against the variable schema defined in the child module. Any field present in tfvars that does not exist in the variable schema must be flagged.
+- **Tfvars ruleset values unchanged**: The values in `terraform/terraform.tfvars` for the `branch_protection` object (enforcement, bypass_actors, and all rules under `rules.*`) must match the values defined in the [Ruleset Configuration Summary](#ruleset-configuration-summary) table in this specification. Any change to these values must be intentional and documented.
+- **Gitignore terraform state entries preserved**: The root `.gitignore` file must always contain the entries `.terraform/`, `*.tfstate`, and `*.tfstate.*`. These entries prevent accidental commits of local Terraform state (see [State Management](#state-management)) and must never be removed. The test must verify that all three entries are present in `.gitignore`.
 
 > [!WARNING]
-> These tests enforce that terraform variables and rules cannot be changed unexpectedly. If a test fails, the change is either modifying the branch protection ruleset configuration (which requires explicit spec review) or introducing a schema mismatch (which would cause terraform apply to fail). Both cases must be caught before merge.
+> These tests enforce that terraform variables, ruleset configuration, and `.gitignore` state entries cannot be changed unexpectedly. If a test fails, the change is either modifying the branch protection ruleset configuration or its tfvars values (which requires explicit spec review), removing `.gitignore` entries (which risks leaking state), or introducing a schema mismatch (which would cause terraform apply to fail). All cases must be caught before merge.
 
 The existing `.githooks/` protect skill files from prompt injection and tampering. They should be extended to also enforce workflow integrity:
 
@@ -1386,6 +1636,7 @@ The existing `.githooks/` protect skill files from prompt injection and tamperin
 - If the commit contains a `changes.md`, validate that all required sections (Why, Overview, Runtime Impact Summary, Changes, Tests, Workflow Diagram, Summary) are present. If any section is missing, warn the user and request confirmation before committing.
 - If the commit modifies a skill file in `skills/`, run `skills-ref validate ./my-skill` to validate the SKILL.md frontmatter and naming conventions using the [skills-ref](https://github.com/agentskills/agentskills/tree/main/skills-ref) reference library.
 - If the commit modifies a skill file in `skills/`, run the content validation tests (including the core workflow principles and Design TDD subskill file existence).
+- If any file in `terraform/` is staged, run `terraform fmt -recursive` in the `terraform/` directory to ensure all HCL files are properly formatted.
 - If the commit deletes `AGENTS.md`, warn and require explicit confirmation.
 - If the commit references `design-tdd.md` in a skill file, verify the file exists at `skills/sdd/design-tdd.md`. If missing, block the commit with an error.
 - Run the (AI generated) em-dash replacement script: `node tests/replace-em-dashes.js` on all staged `.md` files. This script scans every staged markdown file for em dashes (U+2014) and replaces them with regular dashes (U+002D). No override is provided - em dashes are never allowed in any `.md` file in this repository.
@@ -1414,6 +1665,8 @@ tests/
 │   └── test_philosophical_boundaries.js
 ├── artifacts/               # Output file schema validation
 │   └── test_artifact_structure.js
+├── githooks/                # Githook script content validation
+│   └── test_githook_content.js
 ├── terraform/               # Terraform invariant checks
 │   └── test_terraform_invariants.js
 ├── replace-em-dashes.js     # Utility script: replaces U+2014 with U+002D in .md files. Used by pre-commit hook
@@ -1477,13 +1730,6 @@ The README should explain how requirements can originate from Jira while making 
 
 ## README Generation
 
-The coding agent must generate a complete README. The README is one of the most important deliverables of the repository because it is the first thing that potential users will read.
-
-### Header
-
-The README must begin with the following ASCII art header centered on the page, followed by the tagline and quick links. This is the first thing users see and should immediately communicate the identity of the project.
-
-```html
 <div align="center">
 <pre>
 ████████╗██╗  ██╗ ██████╗ ██╗   ██╗ ██████╗ ██╗  ██╗████████╗██╗    ██╗███████╗ █████╗ ██╗   ██╗███████╗
@@ -1496,9 +1742,12 @@ The README must begin with the following ASCII art header centered on the page, 
 <strong>Turn any coding agent into your favourite mental sparring companion. <br>Define (team) conventions, write intent-driven specs, gain knowledge while composing specs, know what changed.</strong>
 <br>
 <em>Simple, lightweight, and easy to use. Few skills. No external dependencies. No coding agent lock-in.</em>
+<br><br>
+⦿ <a href="IDEA.md">IDEA.md</a> ⦿ <a href="CONTRIBUTING.md">CONTRIBUTING.md</a> ⦿ <a href="REPO_STRUCTURE.md">REPO_STRUCTURE.md</a><br>⦿ <a href="skills/init-agents-file/">init-agents-file</a> ⦿ <a href="skills/sdd/">sdd</a> ⦿ <a href="skills/changes/">changes</a> ⦿ <a href=".githooks/">githooks</a>
+<br>⦿ <a href="LICENSE">LICENSE</a>
 </div>
 
-<br>
+### Simplified Flow Diagram (ANSI ART)
 <pre>
         Idea · Ticket · Feature request
                │ intent & context
@@ -1534,443 +1783,74 @@ The README must begin with the following ASCII art header centered on the page, 
     Implementation  →  Review  →  specs/ (permanent memory)
 </pre>
 
-<a href="IDEA.md">IDEA.md</a> - <a href="AGENTS.md">AGENTS.md</a> - <a href="CONTRIBUTING.md">CONTRIBUTING.md</a> - <a href="REPO_STRUCTURE.md">REPO_STRUCTURE.md</a> - <a href="skills/init-agents-file/">init-agents-file</a> - <a href="skills/sdd/">sdd</a> - <a href="skills/changes/">changes</a> - <a href=".githooks/">githooks</a>
+### What `thoughtweave` is
 
-<a href="LICENSE">MIT License</a>
-</div>
-```
+`thoughtweave` is a development workflow that puts understanding before generation. A collection of reusable skills that guide coding agents through specification, implementation, and documentation. The agent is not a code generator - it is a thinking partner.
 
-The `IDEA.md` link points to the root-level concept document that explains the vision and philosophy behind the project. The `AGENTS.md` link points to the agent instructions for this repository. The `CONTRIBUTING.md` link points to the contributor guide. The `REPO_STRUCTURE.md` link points to the file that explains every folder and file in the repository. The skill links point directly to each skill directory so users can inspect the implementation. The githooks link points to the security hooks directory.
+The workflow: **Intent → Specification → Implementation → Explanation**.
 
-### TL;DR
+For the full philosophy and vision, read [IDEA.md](IDEA.md). For the complete repository layout, read [REPO_STRUCTURE.md](REPO_STRUCTURE.md).
 
-The README must begin with a short summary section centered on the core formula:
+### What Makes It Different
 
-**critique + technical human + coding agents + SDD + TDD = quality ensured**
-
-The TL;DR should be textual and descriptive, expanding on this formula in plain language. It should explain, in a few sentences, what this repository is and why it exists. The goal is to communicate the value proposition immediately so that readers know whether to keep reading.
-
-### Manifesto
-
-The README must contain a dedicated manifesto section expressing the author's personal opinions and philosophy. This section is intentionally opinionated.
-
-The manifesto should weave together personal experience, references and philosophy into a cohesive narrative rather than listing points. It should read like a personal essay. The following elements must be present but should flow naturally within the text:
-
-The story should start from the author's LinkedIn post about SDD and coding agents (https://www.linkedin.com/posts/amatofrancesco99_softwareengineering-specdrivendevelopment-share-7426897723586400256-PfsM) explaining that they were already using this approach in their daily work, just less structured than what `thoughtweave` is today. The post articulated the missing piece - intent - and how existing tools did not address it, leading to the creation of this repository.
-
-It should reference the human intent article (https://noperator.dev/posts/you-can-just-say-it/) as a key inspiration - the central idea that many software engineering problems originate from missing intent rather than missing implementation capability.
-
-It should express the belief that developers must deeply understand requirements, constraints and what is under the hood before they can meaningfully contribute to a project, and the rejection of "vibe coding" as a sustainable development approach - generating code without understanding is not engineering, it is gambling.
-
-It should reference [Writing code was never the bottleneck](https://ordep.dev/posts/writing-code-was-never-the-bottleneck) as a key inspiration - the central idea that writing code has never been the limiting factor in software engineering. Understanding what to build, why, and for whom is the real work. AI generates code, but it doesn't remove the need for engineering judgment.
-
-It should express the belief that developers will not be replaced by coding agents - agents are tools, not replacements, and they should be used as engineering tools that respect the developer's intelligence. As of June 2026, among state-of-the-art coding agents, the author's daily usage shows that OpenAI GPT 5.5 is one of the best (especially with `xhigh` reasoning mode), and DeepSeek V4 is also proving to be a strong contender - the workflow holds up across both.
-
-It should emphasize the importance of community, doubt, self-critique and growth through contribution - this repository is not the final answer, it is a starting point for a conversation.
-
-It should also reference the Google DeepMind paper on [Intelligent AI Delegation](https://arxiv.org/abs/2602.11865) as an academic validation of the problem `thoughtweave` attempts to solve. The paper warns about the risk of de-skilling - that task delegation without a learning component deprives developers of the experience they need to build strategic judgement. It proposes that intelligent frameworks should include a "developmental objective": tracking skill progression, keeping humans cognitively engaged, and allocating tasks at the boundary of their expanding skill set. `thoughtweave` is a practical embodiment of that principle: the `/sdd` skill keeps the developer in the learning loop through a Discovery phase that blends problem exploration with technical study, asking questions and building understanding rather than just generating output.
-
-### Who This Is NOT For
-
-The README must include a dedicated section identifying who this repository is not intended for. Being explicit about who should not use this repository is as important as being explicit about who should.
-
-This repository is not for:
-
-- developers who believe "vibe coding" is the correct approach - if you think generating code without understanding is acceptable, this repository will feel like unnecessary bureaucracy;
-- developers who prioritize speed over understanding - if your goal is to ship code as fast as possible without thinking about trade-offs, maintainability or correctness, you will find this workflow frustrating;
-- developers who do not want to review or understand generated code before shipping - if you trust generated code blindly, you are not engineering, you are accepting risk.
-
-> [!CAUTION]
-> But this section must also be honest about the limitations of the approach itself. The README should acknowledge that `thoughtweave` carries real adoption risks:
->
-> 1. **Too much process** - three skills, two cognitive phases, validation rules, git hooks. Some users will find this overwhelming and give up before starting.
-> 2. **More philosophy than tool** - the value proposition is primarily philosophical (understand first, build second). For users who don't already agree with that philosophy, the process will feel like bureaucracy.
-> 3. **Counter-trend** - the 2026 SDD market is moving toward fewer files, fewer rituals, invisible IDE integration. `thoughtweave` goes the opposite direction: more structure, more deliberate control. It works for intentional developers but fights UX gravity.
->
-> This is not a weakness if the target audience is clear: developers who want to be intentional about their work and are willing to accept process in exchange for understanding.
-
-### Tone
-
-The README should not sound like marketing material. It should not use exaggerated claims, corporate jargon or hype-driven language.
-
-The README should not sound like it was generated by AI. It should feel human, personal and genuine. It should read like it was written by someone who has actual experience using this workflow, not by a language model optimizing for engagement.
-
-The README should feel like it was written by an experienced software engineer sharing lessons learned from real-world usage.
-
-Use simple language. Avoid hype. Avoid buzzwords. Avoid exaggerated claims. Avoid corporate terminology. Write like you are explaining this to another developer over a coffee, not presenting at a conference.
-
-### Content
-
-The README should explain the following topics in order. Philosophy comes before implementation. The "why" matters more than the "how":
-
-- **what** the repository is - a collection of skills for structured, intentional development;
-- **why** it exists - to help developers use coding agents as engineering tools rather than magic boxes;
-- **who** it is for - developers who want to build better software through understanding;
-- **who it is not for** - developers who believe speed matters more than understanding;
-- **which problems** it attempts to solve - missing intent, unclear requirements, implicit assumptions, unvalidated tests;
-- **honest landscape positioning** - the README must acknowledge that the SDD space is not empty (Spec Kit, Kiro, etc. exist), that `thoughtweave` is not a revolutionary category, but that the specific friction it solves - agents generating code without understanding the problem - is real and unresolved;
-- **how the workflow** works - the end-to-end process from idea to shipped feature;
-- **how to install** it with versioning support;
-- **how to contribute** - see [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide: branch strategy, running tests, PR workflow. If you find this useful, help make it better.
-- **agent dependency** - the README must explicitly state that the quality and behaviour of each skill depends on the coding agent being used. Different agents (`opencode`, `codex`, `gemini`, `claude`, etc.) handle the questions, the generation and the output differently. The skills provide the structure and workflow, but the actual interaction is shaped by the agent's capabilities. Users should experiment and use what works for them.
-
-All generated artifacts - `AGENTS.md`, `spec.md`, `changes.md` and the manually created `CONTRIBUTING.md` - should use GitHub alert tags where appropriate to improve scannability. See each skill's [GitHub Alert Tags](#github-alert-tags-in-generated-specs) subsection for specific guidance.
-
-The README must include a **repository tree structure section** that explains every folder and file in the repository, what each contains and what its purpose is. This helps new users understand the project layout at a glance. The README should also link to the dedicated `REPO_STRUCTURE.md` file for a complete reference, and encourage users to read `IDEA.md` for the full vision and philosophy.
-
-For each skill, the README must explain what the skill does and provide a direct link to the generated skill file (e.g., `skills/init-agents-file/`, `skills/sdd/`, `skills/changes/`) so users can inspect the implementation directly.
-
-For each skill, the README must also include a Mermaid flowchart diagram illustrating the skill's workflow. These diagrams must use the same style configuration as the SDD skill (`theme: base`, `look: handDrawn`, `layout: dagre`) and include color styling for better readability. All diagrams should apply a consistent color palette using Mermaid class definitions. To ensure visibility in dark mode, wrap the entire graph inside a `subgraph` block.
-
-**/init-agents-file workflow:**
-
-```mermaid
-%%{init: { "theme": "base", "look": "handDrawn", "layout": "dagre" }}%%
-flowchart TD
-    subgraph bg[" "]
-    direction TB
-    classDef start fill:#CEEAD6,color:#1a3a15,stroke:#8fbf9a,stroke-width:2px
-    classDef process fill:#D2E3FC,color:#0f2440,stroke:#8fb0e0,stroke-width:2px
-    classDef decision fill:#FEEFC3,color:#4d2e0f,stroke:#d4c48a,stroke-width:2px
-    classDef endclass fill:#FAD2CF,color:#3a1a1a,stroke:#d4a8a3,stroke-width:2px
-
-    A[Start /init-agents-file]:::start --> B[Static repository inspection]:::process
-    B --> C{Repository is empty?}:::decision
-    C -->|Yes| D[Propose and adopt standard best practices]:::process
-    C -->|No| E[Start sequential interview - one question at a time]:::process
-    E --> F[1. Code conventions and style]:::process
-    F --> G[2. Testing philosophy and framework]:::process
-    G --> H[3. Architectural patterns and tech constraints]:::process
-    H --> I[4. Security and maintainability requirements]:::process
-    D --> J[Generate AGENTS.md matching emerged constraints]:::process
-    I --> J
-    J --> K[Validate all required sections are present]:::process
-    K --> L[End /init-agents-file]:::endclass
-    end
-```
-
-**/sdd workflow:**
-
-```mermaid
-%%{init: { "theme": "base", "look": "handDrawn", "layout": "dagre" }}%%
-flowchart TD
-    subgraph bg[" "]
-    direction TB
-    classDef start fill:#CEEAD6,color:#1a3a15,stroke:#8fbf9a,stroke-width:2px
-    classDef process fill:#D2E3FC,color:#0f2440,stroke:#8fb0e0,stroke-width:2px
-    classDef decision fill:#FEEFC3,color:#4d2e0f,stroke:#d4c48a,stroke-width:2px
-    classDef phase fill:#F1F3F4,color:#2d2d2d,stroke:#c4c7c8,stroke-width:2px
-    classDef endclass fill:#FAD2CF,color:#3a1a1a,stroke:#d4a8a3,stroke-width:2px
-
-    A[Start /sdd]:::start --> A0{Select mode: light or deep}:::decision
-    A0 --> B[Ask 3 ordered questions]:::decision
-    B --> B1[1. Inherit context from past 5 specs?]:::decision
-    B1 --> B2[2. Output folder? default: spec/]:::decision
-    B2 --> B3[3. Search the web for tech details?]:::decision
-    B3 --> C[Phase: Discovery]:::phase
-    C --> D[Explore problem, challenge assumptions]:::process
-    D --> E{Need to dive deeper on a technology?}:::decision
-    E -->|Yes| F[Study: search web, explain concepts]:::process
-    E -->|No| G{Context enabled?}:::decision
-    F --> G
-    H -->|Yes| I[Inspect AGENTS.md, repo, past specs]:::process
-    H -->|No| J[Skip context inspection]:::process
-    I --> K{Web search enabled?}:::decision
-    J --> K
-    K -->|Yes| L[Search best practices, docs, pitfalls]:::process
-    K -->|No| M[Skip web search]:::process
-    L --> N[Generate specification]:::process
-    M --> N
-    N --> O[Validate all sections are present]:::process
-    O --> P[End /sdd]:::endclass
-    end
-```
-
-**/changes workflow:**
-
-```mermaid
-%%{init: { "theme": "base", "look": "handDrawn", "layout": "dagre" }}%%
-flowchart TD
-    subgraph bg[" "]
-    direction TB
-    classDef start fill:#CEEAD6,color:#1a3a15,stroke:#8fbf9a,stroke-width:2px
-    classDef process fill:#D2E3FC,color:#0f2440,stroke:#8fb0e0,stroke-width:2px
-    classDef decision fill:#FEEFC3,color:#4d2e0f,stroke:#d4c48a,stroke-width:2px
-    classDef endclass fill:#FAD2CF,color:#3a1a1a,stroke:#d4a8a3,stroke-width:2px
-
-    A[Start /changes]:::start --> B[Ask 2 ordered questions]:::decision
-    B --> B1[1. Inherit context from past 5 specs?]:::decision
-    B1 --> B2[2. Output folder? default: same as spec]:::decision
-    B2 --> C[Inspect implementation changes]:::process
-    C --> D[Draft changes.md with all sections]:::process
-    D --> E[Validate all sections are present]:::process
-    E --> F[End /changes]:::endclass
-    end
-```
-
-The README should explain the philosophy before explaining the implementation. Tell people why they should care before telling them how to use it.
-
-> [!TIP]
-> The "why" matters more than the "how". If someone understands why this repository exists, they will figure out how to use it. If someone only understands how to use it but not why, they will abandon it at the first inconvenience.
-
-The tone should be pragmatic, opinionated where appropriate and written from first-hand experience. This is not a theoretical exercise. It is a collection of lessons learned from real projects.
-
-### What Makes `thoughtweave` Different
-
-The README should include a comparison section early so readers familiar with Spec Kit or similar SDD tools immediately understand how `thoughtweave` differs. The core distinction is philosophical: `thoughtweave` does not optimize for producing specifications - it optimizes for understanding the problem before producing anything.
-
-This section must be honest about the competitive landscape. The SDD space in 2026 is not empty. GitHub Spec Kit, AWS Kiro, cc-sdd, BMAD, OpenSpec are all solid tools. The pattern "spec-first → plan → implement" is mainstream. But most of these tools share the same limitations: too many phases, too many files, review overload, and a "false sense of control" where you follow a process but the agent is still guessing. The market is not empty - but it is still unsatisfying.
-
-`thoughtweave` is not a revolutionary category. It is a philosophically distinct variant of SDD with a different center of gravity: intent instead of spec. It is an opinionated workflow layer that sits on top of coding agents and guides their reasoning. The part that actually distinguishes it is the **mandatory questioning loop** - the shift from "spec → implement" to "intent → questioning → understanding → spec".
-
-This is closer to discovery engineering or agent-guided system thinking. The anti-assumption layer. That specific problem - surfacing hidden assumptions before code is written - is not well solved by any tool today.
+`thoughtweave` shifts from `spec → implement` to **`intent → questioning → understanding → spec → implement`**.
 
 | Aspect | Spec Kit | superpowers | thoughtweave |
 |---|---|---|---|
 | **Center of the workflow** | The specification (executable) | Process + TDD | The intent |
 | **Primary goal** | Build high-quality software faster | Automate the dev cycle autonomously | Understand the problem deeply |
 | **Starting point** | `/speckit.specify` or `/speckit.constitution` | Brainstorming (Socratic questions) | Intent discovery (why before what) |
-| **Agent's role** | SDD pipeline executor - spec → plan → tasks → implement | Autonomous subagent executor | Thinking partner and reasoning critic |
-| **Hidden assumptions** | Assumptions section + `[NEEDS CLARIFICATION]` markers - surfaced via `/speckit.clarify` | Not addressed | Mandatory - documented explicitly |
-| **`AGENTS.md`** | Managed by `agent-context` extension - auto-updated delimited section | Static template | Built through conversational interviews |
-| **Specs lifecycle** | Permanent - `specs/<NNN>-<feature-name>/` per feature | Design docs → implemented | Permanent engineering memory |
-| **Post-implementation** | `/speckit.converge` (assess vs spec) + community extensions | Not addressed | Dedicated `/changes` skill with stakeholder documentation |
-| **Learning support** | None in core - community extensions exist | Not addressed | Discovery phase built into `/sdd` - blends problem exploration with technical study |
-| **Who writes code** | The AI coding agent via `/speckit.implement` | Subagents dispatched autonomously | The developer, guided by the spec |
-| **Skill count** | 11 built-in commands + extension ecosystem | 14 | 3 |
-| **Invocation** | CLI (`specify`) + AI slash commands (`/speckit.*`) | Auto-triggered via hooks | Manual via `/commands` |
-| **Debugging** | No built-in - community bug extension | 4-phase systematic debugging | Not addressed |
-| **Code review** | No built-in - community extensions | Full cycle with subagent dispatch | Not addressed (human review) |
-| **Maturity** | Production - maintained by GitHub, 30+ integrations | Production v6.0.3 | Pre-alpha (spec only) |
-
-**Pros of `thoughtweave`** (what it does better):
-- Hidden assumptions are mandatory, not optional - most tools treat them as optional or community-driven
-- Discovery phase weaves learning into spec creation - no artificial separation between exploring the problem and studying the technology
-- Post-implementation `/changes` documents the full story for all audiences (devs, managers, stakeholders)
-- Conversational `AGENTS.md` interview produces project-specific guidelines, not generic templates
-- Intent-first approach catches misunderstandings before code is written
-- Lightweight - 3 skills, single install command, no runtime, no lock-in
-- Git hooks protect public skills from prompt injection (unique in the ecosystem)
-
-**Cons of `thoughtweave`** (what it doesn't do):
-- Not implemented yet - only the spec exists, no runnable skills
-- No TDD skill - relies on the developer to follow testing best practices
-- No debugging workflow - systematic debugging is out of scope
-- No code review workflow - review is entirely manual
-- No git integration - branch management, worktrees, merges are the developer's responsibility
-- No subagent support - the agent works in the current session, no parallel task dispatch
-- Manual invocation - skills require explicit `/commands`, no auto-triggering
-- Counter-trend - more structure and deliberate control in a market moving toward invisible IDE integration
+| **Agent's role** | SDD pipeline executor | Autonomous subagent executor | Thinking partner and reasoning critic |
+| **Hidden assumptions** | Assumptions section + `[NEEDS CLARIFICATION]` markers | Not addressed | Mandatory - documented explicitly |
+| **AGENTS.md** | Managed by `agent-context` extension | Static template | Built through conversational interviews |
+| **Specs lifecycle** | Permanent per feature | Design docs → implemented | Permanent engineering memory |
+| **Post-implementation** | `/speckit.converge` + community extensions | Not addressed | Dedicated `/changes` skill |
+| **Learning support** | None in core - community extensions | Not addressed | Discovery phase built into `/sdd` |
+| **Who writes code** | The AI agent via `/speckit.implement` | Subagents dispatched autonomously | The developer, guided by the spec |
+| **Skill count** | 11 built-in + extension ecosystem | 14 | 3 |
+| **Maturity** | Production (GitHub, 30+ integrations) | Production v6.0.3 | Pre-alpha |
 
 **What you actually get here that you don't find elsewhere:**
 
-1. **Intent-first, not spec-first.** Every other SDD tool (Spec Kit, SpecDD, Kiro, cc-sdd, BMAD, OpenSpec) assumes the problem is already clear. You start with a feature description and immediately generate artifacts. `thoughtweave` starts with intent discovery - a single Discovery phase that blends problem exploration and technical study before any spec is written. The spec is a consequence of understanding, not the starting point.
+1. **Intent-first, not spec-first** - starts with intent discovery, not artifact generation.
+2. **Hidden assumptions are mandatory** - surfaced and documented, not optional.
+3. **Conversational AGENTS.md** - sequential interview, project-specific, not a template.
+4. **Permanent engineering memory** - specs remain as a knowledge base.
+5. **Post-implementation explanation** - `/changes` documents what changed and why.
+6. **Built-in learning** - Discovery phase in `/sdd` teaches you what you don't know.
+7. **Lightweight, zero lock-in** - Few skills, `npx skills add`, no runtime, no dependencies.
+8. **Security boundary** - git hooks protect public skills from prompt injection.
 
-2. **Hidden assumptions are mandatory, not optional.** No other tool requires you to document hidden assumptions. Spec Kit has a "constitution," others have templates, but none force you to surface the implicit knowledge that senior developers carry in their heads. `thoughtweave` makes this a required section, with clear prompts to uncover what would otherwise remain invisible until it causes a failure. Hidden assumptions are the difference between a good developer and a great architect, and this is the only tool that treats them as a first-class concern.
+For the full pro/cons, see [IDEA.md](IDEA.md#comparison-with-competitors).
 
-3. **Conversational `AGENTS.md` generation.** Other tools generate `AGENTS.md` from templates (Spec Kit's constitution) or expect you to write it yourself. `thoughtweave` builds it through a sequential interview - one question at a time, distinguishing what can be inferred from code (structure, stack) from what must be asked explicitly (conventions, philosophy, patterns, practices). The result is a file that actually reflects your project, not a generic template.
+### How to Use It
 
-4. **Permanent engineering memory.** In most SDD tools, specs are artifacts you generate and move on from - they're scaffolding, not records. `thoughtweave` treats `specs/` as permanent engineering memory. Specifications and `changes.md` remain in the repository indefinitely, creating a knowledge base similar to Architecture Decision Records but extended to the full lifecycle of every change. A developer joining six months from now can read the specs and understand not just what was built, but why.
+0. **Define guidelines** - Run `/init-agents-file` to set up repository standards (once per project).
+1. **Create a specification** - Run `/sdd` to transform ideas into implementation-ready specs with test cases.
+2. **Implement** - Start a new session. Implement based on the spec.
+3. **Document changes** - Run `/changes` to document what changed, with vulnerability scanning.
+4. **Ship** - Review, adjust, ship. You understand the change because you've been part of every step.
 
-5. **Post-implementation explanation (`/changes`).** No other SDD tool has a dedicated phase for documenting what changed after implementation. Most stop at "implement." `thoughtweave` completes the cycle with a document designed for developers, reviewers, managers and stakeholders - explaining not just what changed, but why, which trade-offs were accepted, and which hidden assumptions were discovered during implementation.
-
-6. **Built-in learning and study.** The `/sdd` skill weaves learning into the Discovery phase. If you don't understand a technology, a constraint, or a trade-off, the skill helps you study it on the spot - by searching the web, by explaining concepts, by asking clarifying questions. No other SDD tool treats the specification process as a learning opportunity.
-
-7. **Lightweight with no lock-in.** Spec Kit requires a CLI (`specify`), Python, and `uvx`. cc-sdd is an npm package with 17 skills. BMAD requires 12+ agent personas. `thoughtweave` is a small set of skills installed via `npx skills add <repo>` - no CLI, no dependencies, no runtime, no vendor lock-in. Just markdown files that any agent can read.
-
-8. **Security boundary for public skills.** Because these skills are public and anyone can import them, `thoughtweave` includes git hooks to prevent prompt injection, tool hijacking and unauthorized modifications. No other SDD tool addresses the security of the skill files themselves.
-
-9. **Visual diagrams built into specs, not an afterthought.** A picture is worth a thousand words. No other tool generates Mermaid diagrams as a native part of the specification - you have to ask for them explicitly every time, and most don't support them at all. `thoughtweave` defines consistent diagram styling (hand-drawn look, pastel palette, dagre layout) and requires at least one diagram per spec where it improves understanding. The diagram is part of the spec, not a separate artifact.
-
-### Usage Examples
-
-The README must include concrete usage examples for multiple coding agents. Each example should be placed inside a collapsed `<details>` section and demonstrate the core skills. For each coding agent, the example should also show how to enable web search if the agent supports it.
+> [!TIP]
+> Each major phase should start a fresh coding-agent session to maintain context quality.
 
 <details>
-<summary>opencode</summary>
+<summary>Tests</summary>
 
-```shell
-# Define repository guidelines
-> /init-agents-file help me define repository guidelines
+The test suite validates repository structure, skill content integrity, philosophical boundaries, artifact schema, terraform invariants, and githook content. All tests are Node.js with vitest, runnable via `npm test`.
 
-# Create a specification
-> /sdd I need to implement user authentication
-
-# Generate changes documentation
-> /changes summarize the implemented changes
-
-# Web search is enabled by default in opencode
-```
+See [Testing & Validation](#testing--validation) for the full specification of test categories and validation rules.
 
 </details>
 
-<details>
-<summary>codex CLI</summary>
+### Versioning & Release
 
-```shell
-# Define repository guidelines
-$ codex /init-agents-file help me define repository guidelines
+- **Master branch**: versions are identified by semantic versioning tags (e.g., `v1.0.0`, `v1.1.0`). Install via `npx skills add <repository>@v1.0.0`.
+- **Other branches**: versions are identified by commit hashes. Install via `npx skills add <repository>#<commit-hash>`.
 
-# Create a specification
-$ codex /sdd I need to implement user authentication
+Releases are created automatically via GitHub Actions on push to `master`: reads latest tag, increments version, creates tag, publishes release with auto-generated notes. The workflow lives in [`.github/workflows/release.yml`](.github/workflows/release.yml), triggers on `master` only, uses semver, and skips if the latest commit already has a tag.
 
-# Generate changes documentation
-$ codex /changes summarize the implemented changes
+### License
 
-# Enable web search in codex CLI:
-# Use the /websearch command or set --web flag
-# Example: $ codex --web /sdd I need to implement user authentication
-```
-
-</details>
-
-<details>
-<summary>Gemini CLI</summary>
-
-```shell
-# Define repository guidelines
-$ gemini /init-agents-file help me define repository guidelines
-
-# Create a specification
-$ gemini /sdd I need to implement user authentication
-
-# Generate changes documentation
-$ gemini /changes summarize the implemented changes
-
-# Enable web search in Gemini CLI:
-# Use the --search flag or /search command
-# Example: $ gemini --search /sdd I need to implement user authentication
-```
-
-</details>
-
-The README should also include a **negative example** showing how NOT to use this workflow - the "vibe coding" approach:
-
-<details>
-<summary>How NOT to use this (vibe coding)</summary>
-
-```shell
-# ❌ Wrong: start coding without understanding the problem
-$ codex "write me a user authentication system"
-
-# ❌ Wrong: iterate blindly without a spec
-$ codex "add login, no wait make it OAuth, actually keep both"
-
-# ❌ Wrong: ship without documenting or reviewing
-$ codex "fix the bugs from the last generation and deploy"
-
-# ❌ Wrong: never check if the approach respects project constraints
-$ codex "just make it work, make no mistakes"
-```
-
-The difference is simple: `thoughtweave` starts with understanding, then specifies, then implements, then explains. Vibe coding starts with generating and hopes for the best.
-
-</details>
-
-### Versioning
-
-The README must document the versioning strategy clearly so that users know how to install specific versions and how versioning works:
-
-- **Master branch**: versions are identified by semantic versioning tags (e.g., `v1.0.0`, `v1.1.0`). Users can install a specific version via `npx skills add <repository>@v1.0.0`. This is the recommended approach for production use.
-- **Other branches**: versions are identified by commit hashes. Users can install from a specific commit via `npx skills add <repository>#<commit-hash>`. This is useful for testing changes before they are merged to master.
-
-### Release Automation
-
-Releases are created automatically via GitHub Actions when code is pushed to the `master` branch:
-
-1. A push to `master` triggers a workflow that detects the change.
-2. The workflow reads the latest git tag, increments the patch version (or minor/major based on commit message conventions), and creates a new tag.
-3. A GitHub Release is created with the new tag, including release notes generated from conventional commit messages between the previous tag and the current one.
-4. Users can then install the new version via `npx skills add <repository>@v<tag>`.
-
-No manual release file is maintained. The release is purely tag-based. The release notes are auto-generated from commit history following conventional commits format (e.g., `feat:`, `fix:`, `breaking:`).
-
-The workflow lives in `.github/workflows/release.yml` at the repository root. It should:
-- Trigger on push to `master` **only** - pushes to any other branch must never trigger a release or version increment.
-- Skip if the latest commit already has a tag (prevents duplicate releases).
-- Use semantic versioning (semver) for tag naming.
-- Create the release with auto-generated notes.
-
-## Repository Security & Git Hooks
-
-> [!WARNING]
-> Because these skills are public and designed to be imported by anyone, they are exposed to prompt injection, tool hijacking, unauthorized tool additions and other manipulation techniques. Malicious actors could modify the skills through pull requests to alter agent behaviour, inject harmful instructions or exfiltrate data.
-
-To mitigate this, the repository must include **git hooks** that enforce the integrity of the skills. Only repository owners can merge to `master`, so the master branch is always reviewed and hook-validated. However, if you install from a non-master commit hash, those protections don't apply - review the hash source carefully before using it.
-
-The pre-commit and pre-push hooks are defined in the [Testing & Validation](#testing--validation) section above. They cover both structural integrity (skill validation, section completeness, unauthorized file detection) and security (prompt injection prevention, tool hijacking detection). The section below summarises the security-specific concerns that those hooks enforce:
-
-**Pre-commit hook** - Before every commit, the hook must:
-- Run `skills-ref validate ./my-skill` on every skill directory in `skills/` to validate SKILL.md frontmatter and naming conventions using the [skills-ref](https://github.com/agentskills/agentskills/tree/main/skills-ref) reference library (already defined in [Testing & Validation](#testing--validation)).
-- Run the full test suite via `npm test` (see [Testing & Validation](#testing--validation)). If any test fails, block the commit.
-- Verify that the skill files (`skills/init-agents-file/`, `skills/sdd/`, `skills/changes/`) have not been modified in ways that deviate from the standard intent defined in this specification.
-- Detect additions of new tools or commands that are not part of the original skill definitions.
-- Flag any prompt changes that appear to inject unauthorized instructions, redirect agent behaviour or exfiltrate data.
-- Block the commit if any check fails, with a clear error message explaining what was detected.
-
-**Pre-push hook** - Before every push to any branch (especially `master`), the hook must:
-- Run the same checks as the pre-commit hook defined above and in [Testing & Validation](#testing--validation).
-- Additionally verify that no new files have been added to the `skills/` directory that were not part of the original repository structure.
-- Additionally verify that no `changes.md` is being pushed without a sibling `spec.md` in the same directory (already enforced by the pre-commit hook in Testing & Validation, but enforced again at push time to catch bypasses).
-- Block the push if any integrity check fails.
-
-The hooks should be located in the repository's `.githooks/` directory and activated via `git config core.hooksPath .githooks/`. The README must document how to enable these hooks and why they exist.
-
-This is not optional. Public skills that control agent behaviour are a security boundary and must be protected accordingly.
-
-This repository is not perfect. It will probably never be perfect. It is a collection of lessons learned from daily software engineering work, and it is expected to evolve through community feedback.
-
-If you want to contribute, start by reading [**IDEA.md**](IDEA.md) - it explains the vision, philosophy and principles behind `thoughtweave`. Understanding the "why" before the "how" is essential: contributions that align with the core philosophy are far more valuable than those that don't.
-
-This repository itself follows the same workflow it promotes. The `AGENTS.md` at the root of this repository codifies the conventions and constraints that apply when contributing - it is maintained directly as part of the repository, not generated on demand.
-
-Upon completion of this first implementation (skills, tests, hooks, and supporting files), a `changes.md` must be generated in [`specs/0-thoughtweave-def/`](specs/0-thoughtweave-def/) to document the bootstrap. This closes the loop on the initial iteration and serves as the canonical example of a changes document. See [`specs/example/`](specs/example/) for the expected format.
-
-### Development setup
-
-To run tests and git hooks locally, you need **Node.js** (latest stable version). Install dependencies with:
-
-```shell
-npm install
-git config core.hooksPath .githooks/
-```
-
-This installs `vitest`, `glob`, and other test libraries, and enables the security hooks that validate skill integrity on every commit.
-
-Changes that deviate from the core philosophy defined in `IDEA.md` or that conflict with the repository owner's intent will not be merged into `master`. This project is opinionated by design - not every good idea belongs here. If your change contradicts the fundamental principles (intent-first, developmental objective, anti-de-skilling), it will not be accepted regardless of technical merit. When in doubt, open an issue first to discuss alignment before investing time in implementation.
-
-If you use this repository and find something that could be better, contribute. If you disagree with an approach, challenge it. If you have a different perspective, share it.
-
-Users should be encouraged to:
-
-- **open issues** - if something is broken, unclear or missing;
-- **suggest improvements** - if a skill could work better or a workflow could be refined;
-- **propose new skills** - if there is a gap in the workflow that a new skill could fill;
-- **challenge assumptions** - if a principle or practice does not make sense in your context;
-- **contribute alternative ideas** - if you have a different approach that works better.
-
-Only repository owners should merge directly into the protected main branch. This maintains the integrity of the repository and ensures that changes are reviewed before they become part of the project.
-
-Community contributions should happen through pull requests. This is the standard open-source model, and it works well for this type of project.
-
-## License
-
-[MIT License](/LICENSE). You are free to use, modify and distribute this repository. Attribution is appreciated but not required.
-
-## Message To Preserve
-
-This is the closing message of the specification and the closing message of the README. It is the last thing readers see, and it should leave them with a clear understanding of what this repository stands for:
-
-- Stop vibe coding.
-- Understand first.
-- Think slowly.
-- Build intentionally.
-- Use coding agents as engineering tools.
-- Ask questions before generating. One at a time.
-- Study what you do not know. The spec process is a learning tool.
-- Doubt your own output. Self-critique before accepting.
-- Surface hidden assumptions. Document what could go wrong.
-- Respect your code.
-- Respect your intelligence.
-
-Most importantly, respect intent. Without intent, code is just noise. With intent, code becomes engineering.
+[MIT License](/LICENSE). You are free to use, modify and distribute this repository. 
+Attribution is appreciated but not mandatory.
