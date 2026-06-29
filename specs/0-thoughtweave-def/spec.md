@@ -58,7 +58,7 @@ Understanding is the objective. The code is just a side effect of understanding 
 > [!IMPORTANT]
 > Every skill in this repository must include two layers of built-in validation:
 >
-> 1. **Pre-condition checks** - before executing, each skill must verify that its prerequisites are met (as defined in each skill's Pre-condition Check section). If prerequisites are missing, the skill must either refuse to proceed or warn the user and document the omission.
+> 1. **Pre-condition checks** - before executing, each skill must verify that its prerequisites are met (as defined in each skill's [Pre-condition Check](#pre-condition-compliance-tests) section). If prerequisites are missing, the skill must either refuse to proceed or warn the user and document the omission.
 > 2. **Output validation** - after generating its output file, the skill must verify that the file contains all required sections as defined by this specification. If a required section is missing, the skill must notify the user and request confirmation before proceeding. This ensures that the output is always complete and that omissions are intentional rather than accidental.
 >
 > Both layers are mandatory. A skill that skips either validation is non-compliant with this specification.
@@ -223,13 +223,13 @@ REPO_STRUCTURE.md                     ✓
 - `examples/` - usage examples for different coding agents and workflows (future)
 - `skills/changes/` - documents what changed and why after implementation (current)
 - `skills/init-agents-file/` - generates and maintains the `AGENTS.md` file (current)
-- `skills/sdd/` - creates implementation-ready specifications from ideas and requirements (current). Includes the Design TDD subskill at `skills/sdd/design-tdd.md`
+- `skills/sdd/` - creates implementation-ready specifications from ideas and requirements (current). Includes the [Design TDD subskill](#design-tdd-subskill) at `skills/sdd/design-tdd.md`
 - `skills/<new>/` - future skills will be added here
 - `specs/` - engineering memory of the project. Each feature has a subdirectory containing `spec.md` (intent, decisions, requirements, tests) and `changes.md` (outcome, trade-offs, discovered assumptions). The `0-thoughtweave-def/` subdirectory is the bootstrap spec that defines thoughtweave itself
-- `terraform/` - Infrastructure as Code for managing GitHub branch protection ruleset. The repository itself is not managed by Terraform - it already exists. This directory is generated from this specification - see the Terraform section below for the exact structure, variables, and ruleset configuration
+- `terraform/` - Infrastructure as Code for managing GitHub branch protection ruleset. The repository itself is not managed by Terraform - it already exists. This directory is generated from this specification - see the [Terraform section](#terraform) below for the exact structure, variables, and ruleset configuration
 - `tests/` - structural, content, compliance, and artifact validation tests. Node.js with vitest. Runnable via `npm test`
 - `AGENTS.md` - agent instructions for contributing to this repository using a coding agent
-- `CLAUDE.md` - symlink to `AGENTS.md` for Claude compatibility. Created automatically by the init-agents-file skill. Ensures Claude reads the same instructions without duplicating content
+- `CLAUDE.md` - symlink to `AGENTS.md` for Claude compatibility. Created automatically by the [init-agents-file skill](#init-agents-file). Ensures Claude reads the same instructions without duplicating content
 - `CONTRIBUTING.md` - guide for contributors: workflow, tests, branch strategy, PR process. Should use the same GitHub alert tag conventions (`> [!IMPORTANT]`, `> [!WARNING]`, `> [!TIP]`, `> [!NOTE]`) defined for skill-generated artifacts
 - `IDEA.md` - concept, vision, philosophy. Start here
 - `LICENSE` - MIT License
@@ -345,7 +345,7 @@ The skill should check whether an `AGENTS.md` already exists in the repository b
 - If `AGENTS.md` exists, the skill should report its current state (file size, last modified date if available) and ask the user whether they want to regenerate it from scratch, update specific areas, or skip.
 - If multiple `AGENTS.md`-like files exist (e.g., `CLAUDE.md`, `.cursorrules`), detect them and ask which one to update.
 
-This check exists to prevent accidental overwrites of a previously configured file. It should always run before the Behaviour section logic.
+This check exists to prevent accidental overwrites of a previously configured file. It should always run before the [Behaviour section](#behaviour) logic.
 
 ### Configurable Areas
 
@@ -408,7 +408,7 @@ The skill must validate that the generated `AGENTS.md` contains all the sections
 
 Transform ideas, Jira tickets, feature requests, business requirements and draft specifications into implementation-ready specifications containing test cases, methodology and validation strategy.
 
-This is the central skill of the repository. Everything else exists to support this workflow. The init-agents-file skill sets the stage. The changes skill documents the outcome. But the sdd skill is where the actual engineering thinking happens.
+This is the central skill of the repository. Everything else exists to support this workflow. The [init-agents-file skill](#init-agents-file) sets the stage. The [changes skill](#changes) documents the outcome. But the [sdd skill](#sdd) is where the actual engineering thinking happens.
 
 There are tools that help with specifications, but nothing that does it the way I want - with proper intent discovery, hidden assumption tracking, decision documentation and integrated test design. This skill fills that gap.
 
@@ -420,7 +420,7 @@ A key aspect of this skill is that it can also be used as a **study and learning
 
 The specification must integrate test design as a first-class concern. Test cases, testing methodology and validation descriptions shall be part of every generated specification. Testing is not an afterthought. It is part of the specification because it forces you to think about how you will verify that the implementation is correct.
 
-To enforce this, the SDD skill includes a nested **Design TDD subskill** (in `skills/sdd/design-tdd.md`): after drafting the requirements, the agent proposes to describe test cases (Given-When-Then) for each requirement - covering happy path, error states, edge cases, and integration boundaries. If a requirement cannot be tested, it is flagged as incomplete. The tests are written into the spec as documentation, not executed. See the Design TDD Subskill section below for the full behaviour.
+To enforce this, the SDD skill includes a nested **Design TDD subskill** (in `skills/sdd/design-tdd.md`): after drafting the requirements, the agent proposes to describe test cases (Given-When-Then) for each requirement - covering happy path, error states, edge cases, and integration boundaries. If a requirement cannot be tested, it is flagged as incomplete. The tests are written into the spec as documentation, not executed. See the [Design TDD Subskill section](#design-tdd-subskill) below for the full behaviour.
 
 ### Intent Discovery
 
@@ -488,7 +488,7 @@ Before any questions or brainstorming, the skill must verify that the project ha
 
 1. Check if `AGENTS.md` exists in the repository root.
 2. If it does not exist, warn the user: *"No AGENTS.md found. This means the coding agent has no project-specific guidelines for repository structure, coding conventions, testing philosophy, or architectural patterns. Without it, generated code may not follow your project's conventions."*
-3. Ask: *"Would you like to run `/init-agents-file` first to create one, or proceed without it?"*
+3. Ask: *"Would you like to run [`/init-agents-file`](#init-agents-file) first to create one, or proceed without it?"*
 4. If the user chooses to proceed without `AGENTS.md`, the skill should continue normally but flag this as a risk in the specification's Decisions, Assumptions & Compromises section, as part of the hidden assumptions documentation.
 
 This check ensures that the engineering contract between the developer and the agent is established before any specification is written. The user can override it, but the omission must be documented.
@@ -511,7 +511,7 @@ The chosen mode must be documented in the Decisions, Assumptions & Compromises s
 Before generating a specification, the skill must ask the following questions in this exact order. The order is intentional - each question sets up context for the next one:
 
 1. **Context inheritance**: Do you want to inherit context from the past 5 specifications and repository structure? This allows the specification to be consistent with previous decisions and the overall architecture of the project.
-2. **Output location**: In which folder should the specification be saved? The default is `specs/`, but the user may choose a different location. If the user chooses a custom location, this same location will be used by the changes skill.
+2. **Output location**: In which folder should the specification be saved? The default is `specs/`, but the user may choose a different location. If the user chooses a custom location, this same location will be used by the [changes skill](#changes).
 3. **Web search**: May I search the web to acquire technical details, best practices and verification approaches regarding the technologies involved? This allows the specification to be informed by current best practices rather than relying solely on the agent's training data.
 
 Each question must be asked and answered before proceeding to the next. The skill should not batch these questions together. They must be asked one at a time, with the user's answer acknowledged before moving to the next question.
@@ -621,7 +621,7 @@ If an `AGENTS.md` file exists in the repository, the acceptance criteria must ex
 
 #### References
 
-Sources consulted during spec generation, listed as clickable links. This section is populated when web search returns relevant material (see Ordered Questions > Web search). Each entry should include the page title and URL. This ensures the spec's research is transparent and verifiable.
+Sources consulted during spec generation, listed as clickable links. This section is populated when web search returns relevant material (see [Ordered Questions > Web search](#ordered-questions)). Each entry should include the page title and URL. This ensures the spec's research is transparent and verifiable.
 
 ### Design TDD Subskill
 
@@ -629,7 +629,7 @@ Design TDD is the practice of *describing* tests during the specification phase 
 
 The rationale: if you cannot describe a test for a requirement, you do not understand the requirement well enough to implement it. The act of describing tests forces you to think about interfaces, edge cases, error states, and how the system will actually behave - not just what it should do in the happy path.
 
-This subskill lives in its own file (`skills/sdd/design-tdd.md`) and is invoked by the main SDD skill (`skills/sdd/SKILL.md`) as a nested step. It runs **after** the Requirements & Best Practices section is drafted but **before** the spec is finalized. It is a mandatory validation loop within the SDD process.
+This subskill lives in its own file (`skills/sdd/design-tdd.md`) and is invoked by the main [SDD skill](#sdd) (`skills/sdd/SKILL.md`) as a nested step. It runs **after** the Requirements & Best Practices section is drafted but **before** the spec is finalized. It is a mandatory validation loop within the SDD process.
 
 **What this subskill does:**
 
@@ -638,7 +638,7 @@ It writes test descriptions into the generated `spec.md`. It does not run or exe
 **Behaviour:**
 
 1. After drafting the Requirements section, the skill must ask: *"Shall I describe the test cases now? This will help validate that the requirements are complete and unambiguous."*
-   - If the user says yes, proceed with the Design TDD process below.
+   - If the user says yes, proceed with the [Design TDD process](#design-tdd-subskill) below.
    - If the user says no, flag this as a risk in the Decisions, Assumptions & Compromises section and proceed.
 
 2. For each functional requirement in the spec, describe at least one test case. For each non-functional requirement, describe the validation approach. The test descriptions do not need to be exhaustive, but they must cover:
@@ -706,7 +706,7 @@ Colors may vary from the reference palette, but the style must remain consistent
 
 ### Validation
 
-The skill must validate that the generated specification contains all sections listed in Specification Structure above. If any section is missing, the skill must warn the user and request confirmation that the omission is intentional. This ensures that every specification is complete and that omissions are deliberate decisions rather than oversights.
+The skill must validate that the generated specification contains all sections listed in [Specification Structure](#specification-structure) above. If any section is missing, the skill must warn the user and request confirmation that the omission is intentional. This ensures that every specification is complete and that omissions are deliberate decisions rather than oversights.
 
 ## Specifications Folder
 
@@ -732,7 +732,7 @@ specs/
     └── changes.md
 ```
 
-The skill should ask whether the user wants a different location before generation. If the user chooses a custom location, the changes skill shall write to the same custom location.
+The skill should ask whether the user wants a different location before generation. If the user chooses a custom location, the [changes skill](#changes) shall write to the same custom location.
 
 The repository itself should also contain example specifications inside the `specs/` folder to demonstrate the workflow. These examples help new users understand what a good specification looks like.
 
@@ -760,12 +760,12 @@ Before any questions, the skill must verify that a specification exists for this
 
 1. Determine the target folder (ask the user if the spec location is not known or cannot be inherited from context).
 2. Check if `spec.md` exists in that folder.
-3. If `spec.md` does not exist, the skill must refuse to generate a changes document and explain: *"A changes document documents what changed relative to a specification. Without a spec, there is no anchor to compare against. Please run `/sdd` first to create a specification for this feature."*
+3. If `spec.md` does not exist, the skill must refuse to generate a changes document and explain: *"A changes document documents what changed relative to a specification. Without a spec, there is no anchor to compare against. Please run [`/sdd`](#sdd) first to create a specification for this feature."*
 4. If `spec.md` exists but is incomplete (missing required sections), the skill should warn the user and ask whether to proceed or complete the spec first. Pay special attention to missing Decisions, Assumptions & Compromises or hidden assumptions sections - these are the most commonly omitted but most critical parts of a spec.
 5. If `spec.md` exists and is complete but noticeably lacks documented hidden assumptions (e.g., the Decisions section only lists choices without exploring what could go wrong), the skill should flag this and ask the user to review before proceeding.
 
 > [!IMPORTANT]
-> This check is non-negotiable. Unlike the SDD pre-condition (which can be overridden), the changes skill cannot produce meaningful output without a spec. The spec and changes document are two halves of the same story - one cannot exist without the other.
+> This check is non-negotiable. Unlike the [SDD pre-condition](#pre-condition-check-1) (which can be overridden), the changes skill cannot produce meaningful output without a spec. The spec and changes document are two halves of the same story - one cannot exist without the other.
 
 ### Implementation Validation
 
@@ -893,11 +893,11 @@ Textual recap, long enough to provide a complete understanding of what was done 
 
 #### GitHub Alert Tags in Generated Changes
 
-The same alert tag rules defined by the SDD skill apply. The changes document should use `> [!IMPORTANT]`, `> [!WARNING]`, `> [!CAUTION]`, `> [!TIP]`, and `> [!NOTE]` to highlight critical decisions, risks discovered during implementation, trade-offs, best practices, and contextual notes. Use sparingly - 2-3 per document maximum.
+The same [alert tag rules defined by the SDD skill](#github-alert-tags-in-generated-specs) apply. The changes document should use `> [!IMPORTANT]`, `> [!WARNING]`, `> [!CAUTION]`, `> [!TIP]`, and `> [!NOTE]` to highlight critical decisions, risks discovered during implementation, trade-offs, best practices, and contextual notes. Use sparingly - 2-3 per document maximum.
 
 ### Mermaid Diagrams
 
-The same Mermaid conventions defined by the SDD skill should be used. Only generate diagrams when they improve understanding - if text communicates the point more clearly, skip the diagram. Consistency in diagram styling across all documents makes the repository feel cohesive and professional.
+The same [Mermaid conventions defined by the SDD skill](#mermaid-diagrams) should be used. Only generate diagrams when they improve understanding - if text communicates the point more clearly, skip the diagram. Consistency in diagram styling across all documents makes the repository feel cohesive and professional.
 
 ### Validation
 
@@ -916,7 +916,7 @@ specs/
     └── changes.md
 ```
 
-If the user chose a custom location during the SDD phase, the changes document must be written to the same custom location. The changes skill inherits the location from the specification. It does not ask the user to choose a new location.
+If the user chose a custom location during the [SDD phase](#sdd), the changes document must be written to the same custom location. The changes skill inherits the location from the specification. It does not ask the user to choose a new location.
 
 The specification explains intent. The changes document explains outcome. They are two halves of the same story, and they must live together.
 
@@ -1345,7 +1345,7 @@ Verify that the Terraform module variables and ruleset configuration have not be
 These tests parse the Terraform HCL files (`terraform/github/variables.tf`, `terraform/github/main.tf`, `terraform/main.tf`, `terraform/terraform.tfvars`) and verify:
 
 - **Variable schema immutability**: The `branch_protection` variable in `terraform/github/variables.tf` must contain exactly the fields defined in the specification (creation, update, deletion, non_fast_forward, required_linear_history, pull_request with its nested fields). No new fields may be added and no existing fields may be removed without updating this specification.
-- **Ruleset defaults unchanged**: The default values for each rule in the `branch_protection.rules` object must match the values defined in this specification (see the Ruleset Configuration Summary table). Any change to a default must be intentional and documented.
+- **Ruleset defaults unchanged**: The default values for each rule in the `branch_protection.rules` object must match the values defined in this specification (see the [Ruleset Configuration Summary](#ruleset-configuration-summary) table). Any change to a default must be intentional and documented.
 - **Ruleset enforcement in main.tf**: The `github_repository_ruleset` resource in `terraform/github/main.tf` must reference `var.branch_protection.rules.*` fields - no rule may be hardcoded inline, bypassing the variable.
 - **Root module alignment**: The variable schema in `terraform/main.tf` (root module) must mirror the child module's schema in `terraform/github/variables.tf`. Any divergence is a bug.
 - **tfvars consistency**: The values in `terraform/terraform.tfvars` must be valid against the variable schema defined in the child module. Any field present in tfvars that does not exist in the variable schema must be flagged.
@@ -1363,7 +1363,7 @@ The existing `.githooks/` protect skill files from prompt injection and tamperin
 - If the commit modifies a skill file in `skills/`, run the content validation tests (including the core workflow principles and Design TDD subskill file existence).
 - If the commit deletes `AGENTS.md`, warn and require explicit confirmation.
 - If the commit references `design-tdd.md` in a skill file, verify the file exists at `skills/sdd/design-tdd.md`. If missing, block the commit with an error.
-- Run the em-dash replacement script: `node tests/replace-em-dashes.js` on all staged `.md` files. This script scans every staged markdown file for em dashes (U+2014) and replaces them with regular dashes (U+002D). No override is provided — em dashes are never allowed in any `.md` file in this repository.
+- Run the em-dash replacement script: `node tests/replace-em-dashes.js` on all staged `.md` files. This script scans every staged markdown file for em dashes (U+2014) and replaces them with regular dashes (U+002D). No override is provided - em dashes are never allowed in any `.md` file in this repository.
 
 **`pre-push`:**
 - Same checks as pre-commit.
@@ -1589,7 +1589,7 @@ The README should explain the following topics in order. Philosophy comes before
 - **how to contribute** - see [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide: branch strategy, running tests, PR workflow. If you find this useful, help make it better.
 - **agent dependency** - the README must explicitly state that the quality and behaviour of each skill depends on the coding agent being used. Different agents (`opencode`, `codex`, `gemini`, `claude`, etc.) handle the questions, the generation and the output differently. The skills provide the structure and workflow, but the actual interaction is shaped by the agent's capabilities. Users should experiment and use what works for them.
 
-All generated artifacts - `AGENTS.md`, `spec.md`, `changes.md` and the manually created `CONTRIBUTING.md` - should use GitHub alert tags where appropriate to improve scannability. See each skill's GitHub Alert Tags subsection for specific guidance.
+All generated artifacts - `AGENTS.md`, `spec.md`, `changes.md` and the manually created `CONTRIBUTING.md` - should use GitHub alert tags where appropriate to improve scannability. See each skill's [GitHub Alert Tags](#github-alert-tags-in-generated-specs) subsection for specific guidance.
 
 The README must include a **repository tree structure section** that explains every folder and file in the repository, what each contains and what its purpose is. This helps new users understand the project layout at a glance. The README should also link to the dedicated `REPO_STRUCTURE.md` file for a complete reference, and encourage users to read `IDEA.md` for the full vision and philosophy.
 
@@ -1867,7 +1867,7 @@ To mitigate this, the repository must include **git hooks** that enforce the int
 The pre-commit and pre-push hooks are defined in the [Testing & Validation](#testing--validation) section above. They cover both structural integrity (skill validation, section completeness, unauthorized file detection) and security (prompt injection prevention, tool hijacking detection). The section below summarises the security-specific concerns that those hooks enforce:
 
 **Pre-commit hook** - Before every commit, the hook must:
-- Run `skills-ref validate ./my-skill` on every skill directory in `skills/` to validate SKILL.md frontmatter and naming conventions using the [skills-ref](https://github.com/agentskills/agentskills/tree/main/skills-ref) reference library (already defined in Testing & Validation).
+- Run `skills-ref validate ./my-skill` on every skill directory in `skills/` to validate SKILL.md frontmatter and naming conventions using the [skills-ref](https://github.com/agentskills/agentskills/tree/main/skills-ref) reference library (already defined in [Testing & Validation](#testing--validation)).
 - Run the full test suite via `npm test` (see [Testing & Validation](#testing--validation)). If any test fails, block the commit.
 - Verify that the skill files (`skills/init-agents-file/`, `skills/sdd/`, `skills/changes/`) have not been modified in ways that deviate from the standard intent defined in this specification.
 - Detect additions of new tools or commands that are not part of the original skill definitions.
