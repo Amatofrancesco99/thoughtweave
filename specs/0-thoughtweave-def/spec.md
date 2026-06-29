@@ -33,7 +33,7 @@ Documentation explains outcomes. It closes the loop and makes the work understan
 
 ## Objective
 
-Create a public GitHub repository compatible with skills.sh containing a set of reusable skills that help software engineers work with coding agents in a more deliberate and structured way.
+Create a GitHub repository compatible with skills.sh containing a set of reusable skills that help software engineers work with coding agents in a more deliberate and structured way.
 
 The repository should be installable through:
 
@@ -193,7 +193,7 @@ REPO_STRUCTURE.md
 - `specs/` - the engineering memory of the project, containing all specifications
 - `examples/` - usage examples for different coding agents and workflows
 - `docs/` - additional documentation and references
-- `terraform/` - Infrastructure as Code for managing GitHub resources (repository, branch protection ruleset). This directory is generated from this specification - see the Terraform section below for the exact structure, variables, and ruleset configuration.
+- `terraform/` - Infrastructure as Code for managing GitHub branch protection ruleset. The repository itself is not managed by Terraform - it already exists. This directory is generated from this specification - see the Terraform section below for the exact structure, variables, and ruleset configuration.
 - `.github/workflows/release.yml` - GitHub Actions workflow for automatic releases on push to master
 - `AGENTS.md` - agent instructions for contributing to this repository using a coding agent
 - `CLAUDE.md` - symlink to `AGENTS.md` for Claude compatibility. Created automatically by the init-agents-file skill. Ensures Claude reads the same instructions without duplicating content.
@@ -891,9 +891,9 @@ Together they tell the complete story of a change - from the initial idea, throu
 
 ### Purpose
 
-The `terraform/` directory contains the Infrastructure as Code configuration for bootstrapping the `thoughtweave` GitHub repository itself - creating the repository, configuring its visibility and features, and enforcing branch protection rules on the default branch.
+The `terraform/` directory contains the Infrastructure as Code configuration for managing the `thoughtweave` GitHub repository's branch protection rules. It does **not** create the repository — the repository already exists and is managed outside of Terraform (e.g., created manually or via GitHub UI).
 
-This is a convenience layer. It is not required to use the skills. It exists so that the repository owner can reliably recreate the GitHub setup from scratch without manually clicking through GitHub's UI. The terraform state is kept **local** (never pushed to remote or stored in a remote backend).
+This is a convenience layer. It is not required to use the skills. It exists so that the repository owner can manage branch protection rules without manually clicking through GitHub's UI. The terraform state is kept **local** (never pushed to remote or stored in a remote backend).
 
 ### Structure
 
@@ -906,8 +906,8 @@ terraform/
 ├── terraform.tfvars         # Auto-loaded default values (loaded automatically by Terraform)
 └── github/                  # Child module: GitHub resource definitions
     ├── providers.tf          # Provider config (integrations/github ~> 6.5)
-    ├── variables.tf          # Module variables (repository, branch_protection)
-    └── main.tf               # github_repository + github_repository_ruleset
+    ├── variables.tf          # Module variables (repository_name, branch_protection)
+    └── main.tf               # data.github_repository + github_repository_ruleset
 ```
 
 ### Files
@@ -930,16 +930,9 @@ The provider does **not** hardcode a token. It reads the `GITHUB_TOKEN` environm
 #### `terraform/github/variables.tf`
 
 ```hcl
-variable "repository" {
-  description = "Repository settings"
-  type = object({
-    name         = string
-    description  = string
-    visibility   = string
-    has_issues   = optional(bool, true)
-    has_projects = optional(bool, false)
-    has_wiki     = optional(bool, false)
-  })
+variable "repository_name" {
+  description = "Name of the existing GitHub repository"
+  type        = string
 }
 
 variable "branch_protection" {
@@ -974,22 +967,12 @@ Every field uses `optional()` with sensible defaults so `.tfvars` files only nee
 #### `terraform/github/main.tf`
 
 ```hcl
-resource "github_repository" "repo" {
-  name        = var.repository.name
-  description = var.repository.description
-  visibility  = var.repository.visibility
-
-  has_issues      = var.repository.has_issues
-  has_projects    = var.repository.has_projects
-  has_wiki        = var.repository.has_wiki
-  has_discussions = false
-
-  is_template = false
-  auto_init   = false
+data "github_repository" "repo" {
+  name = var.repository_name
 }
 
 resource "github_repository_ruleset" "protect_default_branch" {
-  repository  = github_repository.repo.name
+  repository  = data.github_repository.repo.name
   name        = "Protect default branch"
   target      = "branch"
   enforcement = var.branch_protection.enforcement
@@ -1033,16 +1016,9 @@ Uses `dynamic` blocks for `bypass_actors` so the list is entirely driven by `.tf
 #### `terraform/main.tf` (root module)
 
 ```hcl
-variable "repository" {
-  description = "Repository settings"
-  type = object({
-    name         = string
-    description  = string
-    visibility   = string
-    has_issues   = optional(bool, true)
-    has_projects = optional(bool, false)
-    has_wiki     = optional(bool, false)
-  })
+variable "repository_name" {
+  description = "Name of the existing GitHub repository"
+  type        = string
 }
 
 variable "branch_protection" {
@@ -1074,7 +1050,7 @@ variable "branch_protection" {
 module "github" {
   source = "./github"
 
-  repository        = var.repository
+  repository_name   = var.repository_name
   branch_protection = var.branch_protection
 }
 ```
@@ -1086,12 +1062,7 @@ The root module mirrors the child module's variable schemas and passes them thro
 ```hcl
 # Set GITHUB_TOKEN environment variable before running terraform apply
 
-repository = {
-  name        = "thoughtweave"
-  description = "Turn any coding agent into your favourite mental sparring companion"
-  visibility  = "public"
-  has_issues  = true
-}
+repository_name = "thoughtweave"
 
 branch_protection = {
   enforcement = "active"
@@ -1126,7 +1097,7 @@ This file is loaded automatically by Terraform (no `-var-file` flag needed). The
 The README should document:
 - prerequisites (Terraform >= 1.5, GitHub PAT with `repo` and `administration` scopes);
 - quick start (`export GITHUB_TOKEN`, `terraform init`, `terraform apply`);
-- variable reference tables for `repository` and `branch_protection` with all nested keys, types, defaults and descriptions;
+- variable reference tables for `repository_name` and `branch_protection` with types and descriptions;
 - authentication section explaining that `GITHUB_TOKEN` env var is used;
 - environment-specific configs using separate `.tfvars` files.
 
@@ -1197,6 +1168,7 @@ When implementing this section, the coding agent must:
 4. Run `terraform init` and `terraform validate` to verify correctness.
 5. Ensure the root `.gitignore` already contains `.terraform/`, `*.tfstate`, and `*.tfstate.*` entries.
 6. Generate or update the `README.md` with full usage documentation.
+7. **Do not** create a `github_repository` resource — the repository already exists and must not be managed by Terraform.
 
 ## Testing & Validation
 
