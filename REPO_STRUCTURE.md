@@ -121,7 +121,7 @@ specs/
     └── changes.md    # Outcome, trade-offs, hidden assumptions discovered
 ```
 
-### [`terraform/`](./terraform/) (Infrastructure as Code)
+### [`terraform/`](./terraform/) (GitHub repo settings)
 
 This directory is not checked into the repository - it is created on the fly by a coding agent following the [Terraform section of the specification](specs/0-thoughtweave-def/spec.md#terraform). When you ask a coding agent to implement that part of the spec, it will generate the exact folder structure and files documented there.
 
