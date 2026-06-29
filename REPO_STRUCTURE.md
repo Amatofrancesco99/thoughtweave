@@ -49,7 +49,7 @@ thoughtweave/
 │   ├── README.md            # Usage, configuration, and apply instructions
 │   └── terraform.tfvars     # Auto-loaded default values
 │
-├── tests/                   # Test suite: structural, content, compliance, artifact validation (Node.js with vitest)
+├── tests/                   # Test suite: structural, content, compliance, artifact, terraform validation (Node.js with vitest)
 │   └── package.json
 ├── .gitignore               # Ignores system files, dependencies, skill cache, and logs
 ├── AGENTS.md                # Agent instructions for contributing via coding agent
@@ -141,7 +141,7 @@ See the [Terraform section in the spec](specs/0-thoughtweave-def/spec.md#terrafo
 
 ### [`tests/`](./tests/) (Validation)
 
-Tests validate the repository structure, skill content integrity, philosophical boundaries, and artifact schema. Since skills are plain markdown for LLMs (not executable code), tests perform structural and content pattern checks rather than functional execution. All tests use Node.js with `vitest` - no shell scripts or Python. Runnable via `npm test`. See `spec.md` for the full list of test files and their validation rules.
+Tests validate the repository structure, skill content integrity, philosophical boundaries, artifact schema, and terraform invariants. Since skills are plain markdown for LLMs (not executable code), tests perform structural and content pattern checks rather than functional execution. All tests use Node.js with `vitest` - no shell scripts or Python. Runnable via `npm test`. See `spec.md` for the full list of test files and their validation rules.
 
 ### [`.gitignore`](./.gitignore)
 

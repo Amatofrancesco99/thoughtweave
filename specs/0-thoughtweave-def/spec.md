@@ -155,54 +155,87 @@ This repository intentionally prioritizes understanding over implementation spee
 
 The repository currently contains three skills representing the lifecycle of a software change. More skills may be added over time as the workflow evolves. Each skill corresponds to a phase of the workflow and can be used independently, although they are designed to work together.
 
+> [!TIP]
+> Legend: `✓` = exists (no action needed) | `x` = needs creation or update
+
 ```
-.githooks/
-├── pre-commit
-└── pre-push
-
-skills/
-├── init-agents-file/
-├── sdd/
-├── changes/
-└── <new>/
-
-specs/
-examples/
-docs/
-
 .github/
 └── workflows/
-    └── release.yml
+    └── release.yml                    x
 
-AGENTS.md
-CLAUDE.md -> AGENTS.md  (symlink)
-CONTRIBUTING.md
-IDEA.md
-LICENSE
-README.md
+.githooks/
+├── pre-commit                        x
+└── pre-push                          x
 
-REPO_STRUCTURE.md
-.gitignore
+docs/
+└── (future)
+
+examples/
+└── (future)
+
+skills/
+├── changes/
+│   ├── SKILL.md                      x
+│   └── ...                           x
+├── init-agents-file/
+│   ├── SKILL.md                      x
+│   └── ...                           x
+├── sdd/
+│   ├── SKILL.md                      x
+│   ├── design-tdd.md                 x
+│   └── ...                           x
+└── <new>/                            x
+
+specs/
+├── 0-thoughtweave-def/
+│   ├── changes.md                    x
+│   └── spec.md                       x
+└── example/
+    ├── changes.md                    x
+    ├── draft.md                      x
+    └── spec.md                       x
+
+terraform/
+├── github/
+│   ├── main.tf                       x
+│   ├── providers.tf                  x
+│   └── variables.tf                  x
+├── main.tf                           x
+├── README.md                         x
+└── terraform.tfvars                  x
+
+tests/
+└── package.json                      x
+
+.gitignore                            ✓
+AGENTS.md                             x
+CLAUDE.md -> AGENTS.md  (symlink)     x
+CONTRIBUTING.md                       x
+IDEA.md                               ✓
+LICENSE                               ✓
+README.md                             x
+REPO_STRUCTURE.md                     ✓
 ```
 
-- `.githooks/` - git hooks that enforce skill integrity and workflow correctness
-- `skills/init-agents-file/` - generates and maintains the `AGENTS.md` file (current)
-- `skills/sdd/` - creates implementation-ready specifications from ideas and requirements (current)
-- `skills/changes/` - documents what changed and why after implementation (current)
-- `skills/<new>/` - future skills will be added here
-- `specs/` - the engineering memory of the project, containing all specifications
-- `examples/` - usage examples for different coding agents and workflows
-- `docs/` - additional documentation and references
-- `terraform/` - Infrastructure as Code for managing GitHub branch protection ruleset. The repository itself is not managed by Terraform - it already exists. This directory is generated from this specification - see the Terraform section below for the exact structure, variables, and ruleset configuration.
 - `.github/workflows/release.yml` - GitHub Actions workflow for automatic releases on push to master
+- `.githooks/` - git hooks that enforce skill integrity and workflow correctness
+- `docs/` - additional documentation and references (future)
+- `examples/` - usage examples for different coding agents and workflows (future)
+- `skills/changes/` - documents what changed and why after implementation (current)
+- `skills/init-agents-file/` - generates and maintains the `AGENTS.md` file (current)
+- `skills/sdd/` - creates implementation-ready specifications from ideas and requirements (current). Includes the Design TDD subskill at `skills/sdd/design-tdd.md`
+- `skills/<new>/` - future skills will be added here
+- `specs/` - engineering memory of the project. Each feature has a subdirectory containing `spec.md` (intent, decisions, requirements, tests) and `changes.md` (outcome, trade-offs, discovered assumptions). The `0-thoughtweave-def/` subdirectory is the bootstrap spec that defines thoughtweave itself
+- `terraform/` - Infrastructure as Code for managing GitHub branch protection ruleset. The repository itself is not managed by Terraform - it already exists. This directory is generated from this specification - see the Terraform section below for the exact structure, variables, and ruleset configuration
+- `tests/` - structural, content, compliance, and artifact validation tests. Node.js with vitest. Runnable via `npm test`
 - `AGENTS.md` - agent instructions for contributing to this repository using a coding agent
-- `CLAUDE.md` - symlink to `AGENTS.md` for Claude compatibility. Created automatically by the init-agents-file skill. Ensures Claude reads the same instructions without duplicating content.
-- `CONTRIBUTING.md` - guide for contributors: workflow, tests, branch strategy, PR process. Should use the same GitHub alert tag conventions (`> [!IMPORTANT]`, `> [!WARNING]`, `> [!TIP]`, `> [!NOTE]`) defined for skill-generated artifacts.
-- `IDEA.md` - concept, vision, philosophy. Start here.
+- `CLAUDE.md` - symlink to `AGENTS.md` for Claude compatibility. Created automatically by the init-agents-file skill. Ensures Claude reads the same instructions without duplicating content
+- `CONTRIBUTING.md` - guide for contributors: workflow, tests, branch strategy, PR process. Should use the same GitHub alert tag conventions (`> [!IMPORTANT]`, `> [!WARNING]`, `> [!TIP]`, `> [!NOTE]`) defined for skill-generated artifacts
+- `IDEA.md` - concept, vision, philosophy. Start here
 - `LICENSE` - MIT License
 - `README.md` - main documentation, installation, workflow guide
 - `REPO_STRUCTURE.md` - this file, every folder and file explained
-- `.gitignore` - ignores system files, dependencies (`node_modules/`), skill cache (`.skills/`), terraform local cache (`.terraform/`), terraform state files (`*.tfstate`, `*.tfstate.*`), and logs (`*.log`). The terraform entries exist so local state is never committed if a contributor runs `terraform apply` locally.
+- `.gitignore` - ignores system files, dependencies (`node_modules/`), skill cache (`.skills/`), terraform local cache (`.terraform/`), terraform state files (`*.tfstate`, `*.tfstate.*`), and logs (`*.log`). The terraform entries exist so local state is never committed if a contributor runs `terraform apply` locally
 
 > [!NOTE]
 > The implementation may evolve if a better structure is identified. This is a starting point, not a prison.
@@ -492,7 +525,8 @@ If the user answers yes to question 1, the skill should inspect the following so
 - **`AGENTS.md`** - to understand the project's engineering standards and conventions;
 - **repository structure** - to understand how the codebase is organized and where new code should fit;
 - **the latest five specifications** in the `specs/` folder - to understand what decisions have been made recently and maintain consistency;
-- **external documentation** - any documentation files that may contain relevant context.
+- **external documentation** - any documentation files that may contain relevant context;
+- **the actual codebase** - to read existing source files, understand naming conventions, module boundaries, and existing patterns before proposing new code.
 
 If the user answers yes to question 3, the skill should perform web searches for:
 
@@ -886,6 +920,9 @@ If the user chose a custom location during the SDD phase, the changes document m
 The specification explains intent. The changes document explains outcome. They are two halves of the same story, and they must live together.
 
 Together they tell the complete story of a change - from the initial idea, through the reasoning and decisions, to the final implementation and its impact.
+
+> [!IMPORTANT]
+> For writing docs and features — and especially when incrementing an already-started codebase — the agent must have access to the repository and codebase. Without reading the existing code, it cannot understand conventions, module boundaries, or architectural decisions. All three skills depend on the agent's ability to read files, inspect structure, and analyze existing patterns: `/init-agents-file` (inspects repo structure and stack), `/sdd` (context discovery and codebase inspection), and `/changes` (implementation validation against the spec).
 
 ## Terraform
 
@@ -1295,7 +1332,20 @@ Verify that generated output files follow the required structure. These tests us
 
 These tests can be run against the example files in `specs/example/` and any user-generated files.
 
-### Githooks extension
+#### Terraform invariant tests
+
+Verify that the Terraform module variables and ruleset configuration have not been modified from their defined specification. The `branch_protection` variable and its `rules` object are critical infrastructure guardrails - they define the security posture of the default branch and must not be altered accidentally or without explicit awareness.
+
+These tests parse the Terraform HCL files (`terraform/github/variables.tf`, `terraform/github/main.tf`, `terraform/main.tf`, `terraform/terraform.tfvars`) and verify:
+
+- **Variable schema immutability**: The `branch_protection` variable in `terraform/github/variables.tf` must contain exactly the fields defined in the specification (creation, update, deletion, non_fast_forward, required_linear_history, pull_request with its nested fields). No new fields may be added and no existing fields may be removed without updating this specification.
+- **Ruleset defaults unchanged**: The default values for each rule in the `branch_protection.rules` object must match the values defined in this specification (see the Ruleset Configuration Summary table). Any change to a default must be intentional and documented.
+- **Ruleset enforcement in main.tf**: The `github_repository_ruleset` resource in `terraform/github/main.tf` must reference `var.branch_protection.rules.*` fields - no rule may be hardcoded inline, bypassing the variable.
+- **Root module alignment**: The variable schema in `terraform/main.tf` (root module) must mirror the child module's schema in `terraform/github/variables.tf`. Any divergence is a bug.
+- **tfvars consistency**: The values in `terraform/terraform.tfvars` must be valid against the variable schema defined in the child module. Any field present in tfvars that does not exist in the variable schema must be flagged.
+
+> [!WARNING]
+> These tests enforce that terraform variables and rules cannot be changed unexpectedly. If a test fails, the change is either modifying the branch protection ruleset configuration (which requires explicit spec review) or introducing a schema mismatch (which would cause terraform apply to fail). Both cases must be caught before merge.
 
 The existing `.githooks/` protect skill files from prompt injection and tampering. They should be extended to also enforce workflow integrity:
 
@@ -1332,6 +1382,8 @@ tests/
 │   └── test_philosophical_boundaries.js
 ├── artifacts/               # Output file schema validation
 │   └── test_artifact_structure.js
+├── terraform/               # Terraform invariant checks
+│   └── test_terraform_invariants.js
 ├── package.json             # Dependencies (vitest, glob, etc.)
 └── README.md                # How to run tests
 ```
