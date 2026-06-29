@@ -1,5 +1,28 @@
 # **`thoughtweave`: Repository Specification**
 
+## Table of Contents
+
+- [Meaning](#meaning)
+- [Objective](#objective)
+- [Core Philosophy](#core-philosophy)
+  - [Intent First](#intent-first)
+  - [Slow Thinking Over Fast Guessing](#slow-thinking-over-fast-guessing)
+  - [Engineering Is Thinking](#engineering-is-thinking)
+- [Repository Structure](#repository-structure)
+- [`CONTRIBUTING.md` Structure](#contributingmd-structure)
+- [`/init-agents-file`](#init-agents-file)
+- [`/sdd`](#sdd)
+- [Specifications Folder](#specifications-folder)
+- [`/changes`](#changes)
+- [Terraform](#terraform)
+- [Testing & Validation](#testing--validation)
+- [Recommended Workflow](#recommended-workflow)
+- [Jira Integration](#jira-integration)
+- [README Generation](#readme-generation)
+- [Repository Security & Git Hooks](#repository-security--git-hooks)
+- [License](#license)
+- [Message To Preserve](#message-to-preserve)
+
 ## Meaning
 
 `thoughtweave` is a development workflow that puts understanding before generation. The name combines two concepts that must work together:
@@ -296,6 +319,8 @@ Include the same note as `IDEA.md`: contributions that contradict the core philo
 ### Validation
 
 The `CONTRIBUTING.md` is not validated by the test suite for section completeness (it is a human-written document, not a generated artifact). However, the structural test in `tests/structural/` should verify that the file exists at the repository root.
+
+## `/init-agents-file`
 
 ### Purpose
 
