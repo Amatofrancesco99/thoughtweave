@@ -692,7 +692,7 @@ Configuration:
 - **theme**: base
 - **look**: handDrawn - gives diagrams a sketch-like quality that feels more approachable
 - **layout**: dagre - directed graph layout that works well for most software diagrams
-- **themeVariables**: `{ "background": "#ffffff" }` - sets a white diagram background so charts remain readable in VS Code dark theme (Mermaid in dark mode renders with a transparent background, making pastel nodes nearly invisible against dark chat/editor backgrounds)
+- **background hack**: wrap the entire graph inside a `subgraph` block with empty title (`bg[" "]`) and `direction TB` to ensure visibility in dark mode. The subgraph provides a visible background box that works in both light and dark themes
 - **color palette**: light pastel backgrounds with dark text for readability. Use the following palette as a reference:
   - Start nodes: light green (`#CEEAD6`)
   - Process nodes: light blue (`#D2E3FC`)
@@ -1595,20 +1595,15 @@ The README must include a **repository tree structure section** that explains ev
 
 For each skill, the README must explain what the skill does and provide a direct link to the generated skill file (e.g., `skills/init-agents-file/`, `skills/sdd/`, `skills/changes/`) so users can inspect the implementation directly.
 
-For each skill, the README must also include a Mermaid flowchart diagram illustrating the skill's workflow. These diagrams must use the same style configuration as the SDD skill (`theme: base`, `look: handDrawn`, `layout: dagre`, `themeVariables: { "background": "#ffffff" }`) and include color styling for better readability. All diagrams should apply a consistent color palette using Mermaid class definitions.
+For each skill, the README must also include a Mermaid flowchart diagram illustrating the skill's workflow. These diagrams must use the same style configuration as the SDD skill (`theme: base`, `look: handDrawn`, `layout: dagre`) and include color styling for better readability. All diagrams should apply a consistent color palette using Mermaid class definitions. To ensure visibility in dark mode, wrap the entire graph inside a `subgraph` block.
 
 **/init-agents-file workflow:**
 
 ```mermaid
-%%{init: {
-  "theme": "base",
-  "look": "handDrawn",
-  "layout": "dagre",
-  "themeVariables": {
-    "background": "#ffffff"
-  }
-}}%%
+%%{init: { "theme": "base", "look": "handDrawn", "layout": "dagre" }}%%
 flowchart TD
+    subgraph bg[" "]
+    direction TB
     classDef start fill:#CEEAD6,color:#1a3a15,stroke:#8fbf9a,stroke-width:2px
     classDef process fill:#D2E3FC,color:#0f2440,stroke:#8fb0e0,stroke-width:2px
     classDef decision fill:#FEEFC3,color:#4d2e0f,stroke:#d4c48a,stroke-width:2px
@@ -1626,20 +1621,16 @@ flowchart TD
     I --> J
     J --> K[Validate all required sections are present]:::process
     K --> L[End /init-agents-file]:::endclass
+    end
 ```
 
 **/sdd workflow:**
 
 ```mermaid
-%%{init: {
-  "theme": "base",
-  "look": "handDrawn",
-  "layout": "dagre",
-  "themeVariables": {
-    "background": "#ffffff"
-  }
-}}%%
+%%{init: { "theme": "base", "look": "handDrawn", "layout": "dagre" }}%%
 flowchart TD
+    subgraph bg[" "]
+    direction TB
     classDef start fill:#CEEAD6,color:#1a3a15,stroke:#8fbf9a,stroke-width:2px
     classDef process fill:#D2E3FC,color:#0f2440,stroke:#8fb0e0,stroke-width:2px
     classDef decision fill:#FEEFC3,color:#4d2e0f,stroke:#d4c48a,stroke-width:2px
@@ -1667,20 +1658,16 @@ flowchart TD
     M --> N
     N --> O[Validate all sections are present]:::process
     O --> P[End /sdd]:::endclass
+    end
 ```
 
 **/changes workflow:**
 
 ```mermaid
-%%{init: {
-  "theme": "base",
-  "look": "handDrawn",
-  "layout": "dagre",
-  "themeVariables": {
-    "background": "#ffffff"
-  }
-}}%%
+%%{init: { "theme": "base", "look": "handDrawn", "layout": "dagre" }}%%
 flowchart TD
+    subgraph bg[" "]
+    direction TB
     classDef start fill:#CEEAD6,color:#1a3a15,stroke:#8fbf9a,stroke-width:2px
     classDef process fill:#D2E3FC,color:#0f2440,stroke:#8fb0e0,stroke-width:2px
     classDef decision fill:#FEEFC3,color:#4d2e0f,stroke:#d4c48a,stroke-width:2px
@@ -1693,6 +1680,7 @@ flowchart TD
     C --> D[Draft changes.md with all sections]:::process
     D --> E[Validate all sections are present]:::process
     E --> F[End /changes]:::endclass
+    end
 ```
 
 The README should explain the philosophy before explaining the implementation. Tell people why they should care before telling them how to use it.
