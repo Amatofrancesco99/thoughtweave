@@ -125,7 +125,7 @@ specs/
 
 This directory is not checked into the repository - it is created on the fly by a coding agent following the [Terraform section of the specification](specs/0-thoughtweave-def/spec.md#terraform). When you ask a coding agent to implement that part of the spec, it will generate the exact folder structure and files documented there.
 
-What this configuration does, in plain English: it lets you manage branch protection rules for this repository through Terraform. The repository itself already exists and is **not** managed by Terraform — only the ruleset is. Instead of clicking through GitHub's UI to lock down the master branch, you run `terraform apply` with your GitHub token and it all happens automatically.
+What this configuration does, in plain English: it lets you manage branch protection rules for this repository through Terraform. The repository itself already exists and is **not** managed by Terraform - only the ruleset is. Instead of clicking through GitHub's UI to lock down the master branch, you run `terraform apply` with your GitHub token and it all happens automatically.
 
 The most important piece is the **branch protection ruleset**. It enforces that:
 

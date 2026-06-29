@@ -891,7 +891,7 @@ Together they tell the complete story of a change - from the initial idea, throu
 
 ### Purpose
 
-The `terraform/` directory contains the Infrastructure as Code configuration for managing the `thoughtweave` GitHub repository's branch protection rules. It does **not** create the repository — the repository already exists and is managed outside of Terraform (e.g., created manually or via GitHub UI).
+The `terraform/` directory contains the Infrastructure as Code configuration for managing the `thoughtweave` GitHub repository's branch protection rules. It does **not** create the repository - the repository already exists and is managed outside of Terraform (e.g., created manually or via GitHub UI).
 
 This is a convenience layer. It is not required to use the skills. It exists so that the repository owner can manage branch protection rules without manually clicking through GitHub's UI. The terraform state is kept **local** (never pushed to remote or stored in a remote backend).
 
@@ -1168,7 +1168,7 @@ When implementing this section, the coding agent must:
 4. Run `terraform init` and `terraform validate` to verify correctness.
 5. Ensure the root `.gitignore` already contains `.terraform/`, `*.tfstate`, and `*.tfstate.*` entries.
 6. Generate or update the `README.md` with full usage documentation.
-7. **Do not** create a `github_repository` resource — the repository already exists and must not be managed by Terraform.
+7. **Do not** create a `github_repository` resource - the repository already exists and must not be managed by Terraform.
 
 ## Testing & Validation
 
