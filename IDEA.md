@@ -312,7 +312,7 @@ git config core.hooksPath .githooks/   # Enable security hooks
 
 ## License
 
-MIT. Do whatever you want.
+[MIT](/LICENSE). Do whatever you want.
 
 ## The final message
 
