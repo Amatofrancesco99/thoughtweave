@@ -68,7 +68,7 @@ skills/
 ├── init-agents-file/
 │   ├── SKILL.md                      x
 │   ├── references/
-│   │   └── antirez-commenting-philosophy.md   x
+│   │   └── commenting-philosophy.md            x
 │   └── ...                           x
 ├── sdd/
 │   ├── SKILL.md                      x
@@ -119,8 +119,8 @@ REPO_STRUCTURE.md                     ✓
   ---
   ```
 - `skills/changes/` - documents what changed and why after implementation (current)
-- `skills/init-agents-file/` - generates and maintains the `AGENTS.md` file (current). Includes `references/` directory with pre-loaded documentation for configurable areas (e.g., the [Antirez commenting philosophy](https://antirez.com/news/124) article for the **code documentation** area)
-- `skills/init-agents-file/references/` - optional per-skill directory containing documentation files that the skill loads as needed instead of fetching from the web. Files are converted to text-only markdown. Currently contains `antirez-commenting-philosophy.md`
+- `skills/init-agents-file/` - generates and maintains the `AGENTS.md` file (current). Includes `references/` directory with pre-loaded documentation for configurable areas (e.g., the [commenting philosophy](skills/init-agents-file/references/commenting-philosophy.md) reference for the **code documentation** area)
+- `skills/init-agents-file/references/` - optional per-skill directory containing documentation files that the skill loads as needed instead of fetching from the web. Files are converted to text-only markdown. Currently contains `commenting-philosophy.md`
 - `skills/sdd/` - creates implementation-ready specifications from ideas and requirements (current). Includes the [Design TDD subskill](#design-tdd-subskill) at `skills/sdd/design-tdd.md`
 - `skills/<new>/` - future skills will be added here
 - `specs/` - engineering memory of the project. Each feature has a subdirectory containing `spec.md` (intent, decisions, requirements, tests) and `changes.md` (outcome, trade-offs, discovered assumptions). The `0-thoughtweave-def/` subdirectory is the bootstrap spec that defines thoughtweave itself
@@ -316,7 +316,7 @@ Each area represents a dimension of engineering practice that the `AGENTS.md` fi
 - **OOP principles** - encapsulation, inheritance, polymorphism, composition preferences;
 - **GoF patterns** - which design patterns are preferred, which are discouraged, which are forbidden;
 - **coding style** - formatting, linting rules, static analysis configuration;
-- **code documentation** - docstrings, inline comments, commenting philosophy. Covers when to comment (function/class docs, design rationale, explaining the "why"), which comment types to prefer and which to avoid. The [Antirez commenting philosophy](skills/init-agents-file/references/antirez-commenting-philosophy.md) (loaded from the skill's `references/` directory) - which classifies comments into nine types (function, design, why, teacher, checklist, guide, trivial, debt, backup) and emphasizes that comments should explain what cannot be inferred from code alone, lowering cognitive load rather than stating the obvious - is available as a selectable practice;
+- **code documentation** - docstrings, inline comments, commenting philosophy. Covers when to comment (function/class docs, design rationale, explaining the "why"), which comment types to prefer and which to avoid. The [commenting philosophy](skills/init-agents-file/references/commenting-philosophy.md) (loaded from the skill's `references/` directory) - which covers intent, boundary, summary, reference, and teacher categories, and emphasizes that comments should capture what the code cannot express - is available as a selectable practice;
 - **technology stack** - languages, frameworks, libraries, versions, compatibility requirements;
 - **operational domain** - the business or technical domain (fintech, healthcare, e-commerce, etc.) and its specific regulations, terminology, and constraints;
 - **repository-specific constraints** - any additional rules that apply specifically to this project.
@@ -422,68 +422,151 @@ Each skill may include a `references/` directory containing pre-loaded documenta
 
 For the `init-agents-file` skill, the following reference is included:
 
-#### `references/antirez-commenting-philosophy.md`
+#### `references/commenting-philosophy.md`
 
-This file contains the full text of the [Antirez commenting philosophy](https://antirez.com/news/124) article, converted to text-only markdown. The skill loads this file when the user selects the **code documentation** configurable area, instead of fetching the article from the web.
+This file contains a practical philosophy of code comments written for the `thoughtweave` project. The skill loads this file when the user selects the **code documentation** configurable area, instead of fetching external content from the web.
 
 <details>
 <summary>Content (click to expand)</summary>
 
-# Writing system software: code comments.
+# A Practical Philosophy of Code Comments
 
-For quite some time I've wanted to record a new video talking about code comments for my "writing system software" series on YouTube. However, after giving it some thought, I realized that the topic was better suited for a blog post, so here we are. In this post I analyze Redis comments, trying to categorize them. Along the way I try to show why, in my opinion, writing comments is of paramount importance in order to produce good code, that is maintainable in the long run and understandable by others and by the authors during modifications and debugging activities.
+Code comments are a tool for communication between the original author and every future reader of that code -- including the author six months later. The question is not whether to comment, but what to comment and how.
 
-Not everybody thinks likewise. Many believe that comments are useless if the code is solid enough. The idea is that when everything is well designed, the code itself documents what the code is doing, hence code comments are superfluous. I disagree with that vision for two main reasons:
+## Why Comments Matter
 
-1. Many comments don't explain what the code is doing. They explain what you can't understand just from what the code does. Often this missing information is \*why\* the code is doing a certain action, or why it's doing something that is clear instead of something else that would feel more natural.
+Reading code tells you _what_ the computer does. Comments tell you _why_ a human chose to make it do that. The distinction is critical: code expresses logic, but intent, context, and trade-offs are invisible in the syntax.
 
-2. While it is not generally useful to document, line by line, what the code is doing, because it is understandable just by reading it, a key goal in writing readable code is to lower the amount of effort and the number of details the reader should take into her or his head while reading some code. So comments can be, for me, a tool for lowering the cognitive load of the reader.
+A well-placed comment reduces the time a reader needs to understand not just the mechanics, but the reasoning behind them. This is not a crutch for unclear code -- it is a complement to clear code.
 
-## Classification of comments
+## Categories of Comments
 
-During my research I identified nine types of comments:
+Different situations call for different kinds of comments. Recognizing the type helps you decide what information belongs in each one.
 
-- Function comments
-- Design comments
-- Why comments
-- Teacher comments
-- Checklist comments
-- Guide comments
-- Trivial comments
-- Debt comments
-- Backup comments
+### Intent Comments
 
-The first six are, in my opinion, mostly very positive forms of commenting, while the final three are somewhat questionable.
+Every piece of code exists because someone made a choice. Intent comments capture that decision: what alternatives were considered, which constraints influenced the outcome, and why the chosen approach won. The code shows the result; the comment preserves the reasoning.
 
-**Function comments** - The goal of a function comment is to prevent the reader from reading code in the first place. After reading the comment, it should be possible to consider some code as a black box that should obey certain rules. Normally function comments are at the top of functions definitions, but they may be at other places, documenting classes, macros, or other functionally isolated blocks of code that define some interface. Function comments are actually a form of in-line API documentation.
+```python
+# A recursive approach is used here instead of iteration
+# because the nesting depth is guaranteed to be < 20.
+# An explicit stack would be equivalent but harder to read
+# for this specific traversal pattern.
+```
 
-**Design comments** - While a function comment is usually located at the start of a function, a design comment is more often located at the start of a file. The design comment basically states how and why a given piece of code uses certain algorithms, techniques, tricks, and implementation. It is a higher level overview of what you'll see implemented in the code.
+Without this comment, a future reader might replace the recursion with an stack-based loop, making the code harder to follow for no benefit.
 
-**Why comments** - Explain the reason why the code is doing something, even if what the code is doing is crystal clear. These comments explain what you can't infer from the code alone.
+Sometimes the intent is about ordering rather than selection:
 
-**Teacher comments** - Don't try to explain the code itself or certain side effects we should be aware of. They teach instead the \*domain\* (for example math, computer graphics, networking, statistics, complex data structures) in which the code is operating, that may be one outside of the reader skills set, or is simply too full of details to recall all them from memory.
+```python
+# The shutdown hook must be registered before any resources
+# are allocated. If registration fails, the entire startup
+# sequence aborts to avoid orphaned connections.
+```
 
-**Checklist comments** - Sometimes because of language limitations, design issues, or simply because of the natural complexity arising in systems, it is not possible to centralize a given concept or interface in one piece, so there are places in the code that tell you to remember to do things in some other place of the code.
+### Boundary Comments
 
-**Guide comments** - A guide comment babysits the reader, assists him or her while processing what is written in the source code by providing clear division, rhythm, and introducing what you are going to read. Guide comments' sole reason to exist is to lower the cognitive load of the programmer reading some code.
+Code often makes assumptions about its inputs, its environment, or the state of the system at the time of execution. Boundary comments make those assumptions visible. They document what callers must guarantee and what the code does not check on its own.
 
-**Trivial comments** - A trivial comment is a guide comment where the cognitive load of reading the comment is the same or higher than just reading the associated code. For example: `array_len++; /* Increment the length of our array. */`
+```python
+# The config object passed here must have either a 'host'
+# or a 'unix_socket' field, but never both. Validation
+# happens upstream in the parser layer.
+```
 
-**Debt comments** - Technical debts statements hard coded inside the source code itself: FIXME, TODO, XXX, "This is a hack", are all forms of debt comments.
+When the boundary involves versioning or protocol details, the comment prevents mistakes that would be hard to debug:
 
-**Backup comments** - Comments where the developer comments older versions of some code block or even a whole function, because she or he is insecure about the change that was operated in the new one.
+```python
+# This channel expects messages where the first byte is
+# the protocol version. Older versions (0x01, 0x02)
+# reorder the header fields. See migration guide in
+# docs/legacy-protocol.md for details.
+```
 
-## Comments as an analysis tool
+### Summary Comments
 
-Comments are rubber duck debugging on steroids, except you are not talking with a rubber duck, but with the future reader of the code, which is more intimidating than a rubber duck, and can use Twitter. So in the process you really try to understand if what you are stating \*is acceptable\*, honorable, good enough. And if it is not, you make your homework, and come up with something more decent.
+A block of code can take many lines to express a single logical step. Summary comments break that sequence into labeled phases. They let a reader scan the overall structure first and zoom into the relevant part later, without reading every line.
 
-It is the same process that happens while writing documentation: the writer attempts to provide the gist of what a given piece of code does, what are the guarantees, the side effects. This is often a bug hunting opportunity. It is very easy while describing something to find that it has holes... You can't really describe it all because you are not sure about a given behavior: such behavior is just emerging from complexity, at random. You really don't want that, so you go back and fix it all.
+```python
+# 1. Acquire the shared lock before touching the buffer
+# 2. Drain pending writes into the output channel
+# 3. Release the lock and notify listeners
+```
 
-## Writing good comments is harder than writing good code
+Summary comments also set expectations: a reader knows what each section will accomplish before studying its details.
 
-You may think that writing comments is a lesser noble form of work. After all you \*can code\*! However consider this: code is a set of statement and function calls, or whatever your programming paradigm is. Sometimes such statements do not make much sense, honestly, if the code is not good. Comments require always to have some design process ongoing, and to understand the code you are writing in a deeper sense. On top of that, in order to write good comments, you have to develop your writing skills. The same writing skills will assist you writing emails, documentation, design documents, blog posts, and commit messages.
+### Domain Comments
 
-I write code because I have an urgent sense to share and communicate more than anything else. Comments coadiuvate the code, assist it, describe our efforts, and after all I love writing them as much as I love writing code itself.
+Some code implements concepts that belong to a specific field: networking, graphics, finance, cryptography, or any specialized area. Domain comments explain the underlying model so that a reader without that background can follow the logic. They teach principles, not decisions.
+
+```
+# This implements a bloom filter with three hash functions.
+# Empty slots are represented by 0, occupied slots by 1.
+# False positives are possible but false negatives are not.
+# The filter size is rounded up to the nearest power of two
+# so that modulo operations compile to bitmask instructions.
+```
+
+A domain comment is different from an intent comment: it describes what the concept is, not why this particular implementation was chosen.
+
+### Interface Comments
+
+Functions and classes define contracts between their author and their callers. Interface comments specify those contracts in plain language: what arguments are expected, what the function returns, and what error conditions can arise. They allow callers to use the abstraction without reading its internals.
+
+```python
+# load_pipeline(config_path, env_override=None)
+# Reads a YAML pipeline definition and resolves all
+# ${VAR} placeholders using the current environment.
+# Returns a Pipeline object with resolved stages.
+# Raises ConfigError if the file is missing, malformed,
+# or references an undefined variable.
+```
+
+A well-written interface comment acts as localized API documentation -- always in sync with the code because it lives right above it.
+
+### Reference Comments
+
+Software projects accumulate context across many documents: specifications, bug reports, design proposals, regulatory requirements. Reference comments create a link between the code and that external context. They answer the question "where does this requirement come from?"
+
+```python
+# The pagination limit of 1000 items matches the upstream
+# API contract defined in docs/api-v2.md#pagination.
+```
+
+Without a reference, a reader has no way to trace a requirement back to its source.
+
+## Comments to Avoid
+
+Not all comments are valuable. Some add noise or even become harmful:
+
+- **Redundant comments** -- restating what the code already expresses clearly. A line like `send_notification()  # Send the notification` adds nothing and erodes trust in surrounding comments.
+- **Outdated comments** -- left behind after code changes, now actively misleading. A comment that contradicts the code is worse than no comment at all.
+- **Commentaries instead of refactoring** -- when a block is so complex it needs a paragraph to explain, the code itself should be simplified. If you feel the need to write a long explanation, refactor first, then comment the remaining non-obvious parts.
+- **Blame comments** -- comments that express frustration about a design decision or another developer's work. They erode team culture and provide no technical value.
+
+## Comments as a Thinking Tool
+
+Writing a comment forces you to articulate your reasoning. If you cannot describe why code does something in a sentence, you may not understand it well enough. The act of commenting is itself a quality check: it surfaces unclear designs, hidden assumptions, and incomplete logic before the code reaches a reviewer.
+
+A good heuristic: if you are about to write a comment and realize you are uncertain about the behaviour, investigate first. The comment is telling you something is wrong with the code.
+
+## When Not to Comment
+
+Comments are not needed when:
+
+- The code is self-explanatory through naming and structure. A well-named function (`is_valid_email()`) does not need `# Check if email is valid`.
+- The comment would repeat what the type system already enforces (e.g., `# This parameter must not be null` when the language has non-nullable types).
+- The behaviour is an obvious consequence of the language or framework. Standard library calls and idiomatic patterns do not need explanation.
+
+## Maintenance Rule
+
+Every comment is a maintenance obligation. When code changes, associated comments must change too. Stale comments are worse than missing ones because they actively mislead. For this reason:
+
+- Prefer comments that describe stable properties (why, intent) rather than volatile implementation details (exact algorithm steps).
+- During code review, flag comments that are no longer accurate as hard issues, not suggestions.
+- If a comment adds no information beyond what the code already says, delete it.
+
+Commenting is not documentation after the fact. It is part of the engineering process.
 
 </details>
 
@@ -1235,7 +1318,7 @@ terraform/
 ├── main.tf                  # Root variables + module call to github
 ├── terraform.tfvars         # Auto-loaded default values (loaded automatically by Terraform)
 └── github/                  # Child module: GitHub resource definitions
-    ├── providers.tf          # Provider config (terraform ~> 1.15, integrations/github ~> 6.5)
+    ├── providers.tf          # Provider config (terraform ~> 1.5, integrations/github ~> 6.5)
     ├── variables.tf          # Module variables (repository_name, branch_protection)
     └── main.tf               # data.github_repository + github_repository_ruleset
 ```
@@ -1246,7 +1329,7 @@ terraform/
 
 ```hcl
 terraform {
-  required_version = "~> 1.15"
+  required_version = "~> 1.5"
   
   required_providers {
     github = {
@@ -1427,7 +1510,7 @@ This file is loaded automatically by Terraform (no `-var-file` flag needed). The
 #### `terraform/README.md`
 
 The README should document:
-- prerequisites (Terraform >= 1.15, GitHub PAT);
+- prerequisites (Terraform >= 1.5, GitHub PAT);
 - quick start (`export GITHUB_TOKEN`, `terraform init`, `terraform apply`);
 - variable reference tables for `repository_name` and `branch_protection` with types and descriptions;
 - authentication section explaining that `GITHUB_TOKEN` env var is used;

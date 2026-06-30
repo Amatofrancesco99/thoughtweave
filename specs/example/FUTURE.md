@@ -1,0 +1,4 @@
+- [ ] Add here an example with three files
+    - [ ] draft.md
+    - [ ] spec.md
+    - [ ] changes.md

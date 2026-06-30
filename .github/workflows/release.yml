@@ -1,0 +1,87 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      version_bump:
+        description: 'Semver component to increment'
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+        default: patch
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if current commit already has a tag
+        id: check_tag
+        run: |
+          git fetch --tags
+          # Verifica se il commit attuale ha già un tag associato
+          current_tag=$(git tag --points-at HEAD)
+          if [ ! -z "$current_tag" ]; then
+            echo "Commit already tagged with $current_tag. Skipping release."
+            echo "skipped=true" >> $GITHUB_OUTPUT
+          else
+            echo "skipped=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Get latest tag
+        if: steps.check_tag.outputs.skipped != 'true'
+        id: get_tag
+        run: |
+          latest_tag=$(git tag --sort=-version:refname | head -n1)
+          if [ -z "$latest_tag" ]; then
+            echo "tag=v0.1.0" >> $GITHUB_OUTPUT
+          else
+            echo "tag=$latest_tag" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Bump version
+        if: steps.check_tag.outputs.skipped != 'true'
+        id: bump
+        run: |
+          latest_tag="${{ steps.get_tag.outputs.tag }}"
+          bump="${{ github.event.inputs.version_bump || 'patch' }}"
+
+          IFS='.' read -r major minor patch <<< "${latest_tag#v}"
+
+          case "$bump" in
+            major) major=$((major + 1)); minor=0; patch=0 ;;
+            minor) minor=$((minor + 1)); patch=0 ;;
+            patch) patch=$((patch + 1)) ;;
+          esac
+
+          new_tag="v${major}.${minor}.${patch}"
+          echo "new_tag=$new_tag" >> $GITHUB_OUTPUT
+
+      - name: Create and Push Tag
+        if: steps.check_tag.outputs.skipped != 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "${{ steps.bump.outputs.new_tag }}" ${{ github.sha }}
+          git push origin "${{ steps.bump.outputs.new_tag }}"
+
+      - name: Create Release
+        if: steps.check_tag.outputs.skipped != 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.bump.outputs.new_tag }}
+          name: ${{ steps.bump.outputs.new_tag }}
+          generate_release_notes: true
+          draft: false
+          prerelease: false

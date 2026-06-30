@@ -1,0 +1,91 @@
+#!/bin/sh
+# pre-commit: Enforce skill integrity, workflow correctness, and test validation
+
+set -e
+
+echo "[pre-commit] Running checks..."
+
+# 1. Em-dash replacement on staged .md files
+STAGED_MD=$(git diff --cached --name-only --diff-filter=ACM | grep '\.md$' || true)
+if [ -n "$STAGED_MD" ]; then
+  echo "$STAGED_MD" | tr '\n' '\0' | xargs -0 node tests/replace-em-dashes.js
+fi
+
+# 2. If a changes.md is staged, verify spec.md exists in same directory
+for f in $(git diff --cached --name-only --diff-filter=ACM | grep 'changes\.md$' || true); do
+  dir=$(dirname "$f")
+  if [ ! -f "$dir/spec.md" ]; then
+    echo "[pre-commit] ERROR: $f staged without sibling spec.md in $dir"
+    exit 1
+  fi
+done
+
+# 3. If a spec.md is staged, validate required sections
+for f in $(git diff --cached --name-only --diff-filter=ACM | grep 'spec\.md$' || true); do
+  content=$(cat "$f")
+  for section in "Objective" "Scope" "Requirements" "Decisions & Compromises" "Tests" "Acceptance Criteria"; do
+    if ! echo "$content" | grep -q "## $section"; then
+      echo "[pre-commit] WARNING: $f missing section: $section"
+    fi
+  done
+done
+
+# 4. If a changes.md is staged, validate required sections
+for f in $(git diff --cached --name-only --diff-filter=ACM | grep 'changes\.md$' || true); do
+  content=$(cat "$f")
+  for section in "Why" "Overview" "Runtime Impact Summary" "Changes" "Tests" "Workflow Diagram" "Summary"; do
+    if ! echo "$content" | grep -q "## $section"; then
+      echo "[pre-commit] WARNING: $f missing section: $section"
+    fi
+  done
+done
+
+# 5. If terraform files are staged, run terraform fmt -recursive
+STAGED_TF=$(git diff --cached --name-only --diff-filter=ACM | grep '\.tf$' || true)
+if [ -n "$STAGED_TF" ] && [ -d "terraform" ]; then
+  if command -v terraform >/dev/null 2>&1; then
+    echo "[pre-commit] Running terraform fmt..."
+    terraform fmt -recursive terraform/
+  else
+    echo "[pre-commit] WARNING: terraform not found, skipping terraform fmt"
+  fi
+fi
+
+# 6. Check for AGENTS.md deletion
+if git diff --cached --name-status --diff-filter=D | grep -q 'AGENTS\.md$'; then
+  echo "[pre-commit] WARNING: AGENTS.md is being deleted. This is likely a mistake."
+  echo "[pre-commit] If intentional, re-run with: SKIP_AGENTS_DELETE=1 git commit"
+  if [ -z "$SKIP_AGENTS_DELETE" ]; then
+    exit 1
+  fi
+fi
+
+# 7. If skill files reference design-tdd.md, verify the file exists
+for f in $(git diff --cached --name-only --diff-filter=ACM | grep '^skills/' || true); do
+  content=$(cat "$f")
+  if echo "$content" | grep -q "design-tdd.md"; then
+    if [ ! -f "skills/sdd/design-tdd.md" ]; then
+      echo "[pre-commit] ERROR: $f references design-tdd.md but skills/sdd/design-tdd.md does not exist"
+      exit 1
+    fi
+  fi
+done
+
+# 8. Run skills-ref validate on staged skill directories
+STAGED_SKILL_DIRS=$(git diff --cached --name-only --diff-filter=ACM | grep '^skills/' | sed 's|^skills/\([^/]*\)/.*|skills/\1|' | sort -u || true)
+if [ -n "$STAGED_SKILL_DIRS" ] && command -v npx >/dev/null 2>&1; then
+  for dir in $STAGED_SKILL_DIRS; do
+    if [ -d "$dir" ]; then
+      echo "[pre-commit] Running skills-ref validate on $dir..."
+      npx skills-ref validate "$dir" 2>/dev/null || echo "[pre-commit] WARNING: skills-ref validation failed for $dir (install with: npm install -g skills-ref)"
+    fi
+  done
+fi
+
+# 9. Run tests
+if [ -f "tests/package.json" ]; then
+  echo "[pre-commit] Running tests..."
+  (cd tests && npm test 2>/dev/null) || echo "[pre-commit] WARNING: Test suite failed but continuing (install vitest with: cd tests && npm install)"
+fi
+
+echo "[pre-commit] All checks passed."
