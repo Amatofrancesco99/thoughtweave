@@ -594,6 +594,8 @@ The skill must follow these behavioural rules when interacting with the user dur
 - Design test cases (Given-When-Then) for each requirement after drafting it, covering happy path, error states, edge cases, and integration boundaries. Use the act of describing tests to validate that the requirements are complete and unambiguous.
 - Validate that all required sections are present in the generated output before considering the spec complete.
 - Only include Mermaid diagrams when they genuinely improve understanding. If text communicates the point more clearly, skip the diagram.
+- Add the `%%{init}` configuration at the top of every Mermaid diagram with `theme: base`, `look: handDrawn`, and `layout: dagre` to ensure a consistent hand-drawn style across all documents.
+- Use the pastel color palette (light green for start, light blue for process, light yellow for decision, light grey for phases, light red for end) with dark text and `stroke-width: 2px` for borders.
 - Wrap every Mermaid diagram inside a `subgraph` block (with empty title and `direction TB`) to ensure visibility in dark mode.
 
 **Do Not:**
@@ -1001,6 +1003,8 @@ The skill must follow these behavioural rules when interacting with the user dur
 - Surface trade-offs accepted during implementation and alternatives that were considered.
 - Self-critique your own draft before presenting it to the user.
 - Only include Mermaid diagrams in the Workflow Diagram section when they genuinely improve understanding. If text communicates the point more clearly, skip the diagram.
+- Add the `%%{init}` configuration at the top of every Mermaid diagram with `theme: base`, `look: handDrawn`, and `layout: dagre` to ensure a consistent hand-drawn style across all documents.
+- Use the pastel color palette (light green for start, light blue for process, light yellow for decision, light grey for phases, light red for end) with dark text and `stroke-width: 2px` for borders.
 - Wrap every Mermaid diagram inside a `subgraph` block (with empty title and `direction TB`) to ensure visibility in dark mode.
 
 **Do Not:**
