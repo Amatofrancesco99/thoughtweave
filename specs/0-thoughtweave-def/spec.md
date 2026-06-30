@@ -484,10 +484,11 @@ I write code because I have an urgent sense to share and communicate more than a
 
 This section defines the `AGENTS.md` content for the `thoughtweave` repository itself, following the `/init-agents-file` skill process described above. When generating or updating `AGENTS.md` for this repo, the coding agent must produce a file with the following content, structure, and constraints. `CLAUDE.md` must always be a symlink to `AGENTS.md`.
 
-**Domain:** Developer tooling - workflow automation and coding agent skills for structured, intent-driven software engineering. The repository provides reusable markdown skills that guide coding agents through specification, implementation, and documentation phases. Agents should be familiar with the thoughtweave philosophy: intent-first, slow thinking, surfacing hidden assumptions, engineering as understanding.
+**Domain:** 
+Developer tooling - workflow automation and coding agent skills for structured, intent-driven software engineering. The repository provides reusable markdown skills that guide coding agents through specification, implementation, and documentation phases. Agents should be familiar with the thoughtweave philosophy: intent-first, slow thinking, surfacing hidden assumptions, engineering as understanding.
 
 **Repository Structure:**
-For repository structure refer to [REPO_STRUCTURE](../../REPO_STRUCTURE.md) file.
+For repository structure refer to [`REPO_STRUCTURE`](../../REPO_STRUCTURE.md) file.
 
 **Architectural Directives:**
 - All skills are plain markdown files in `skills/<name>/SKILL.md` - no executables, no additional software to install.
@@ -518,10 +519,13 @@ When contributing to this repository, the agent must follow these steps in order
 4. If the change is significant, run `/sdd` to create a specification first.
 5. After the specification is ready, ask the user: *"Do you want to continue on an existing branch or create a new one from master? Merging to master requires a pull request, so working on a feature branch is required."* If the user chooses a new branch, create it from master with the chosen name.
 6. Implement the specification on the selected branch, then run `/changes` to document the outcome.
-7. Update the [REPO_STRUCTURE](../../REPO_STRUCTURE.md) file, if new files are added in the repo or structure is changed.
-8. Self-evaluate: *"Is this the best way to respect the constraints, requirements and best practices defined by this specification and AGENTS.md?"*
-9. Git hooks will enforce all checks automatically on commit - ensure the commit succeeds without warnings.
-10. Scan the produced code for vulnerabilities, study each finding, and fix iteratively until the code is clean.
+7. Recall that:
+    - repo structure shall be simple, maintainable, readable, well separed concepts and organized
+    - if new skills or file are added, also tests need to be considered (e.g. skills is valid and checks sections)
+8. Update the [REPO_STRUCTURE](../../REPO_STRUCTURE.md) file, if new files are added in the repo or structure is changed.
+9. Self-evaluate: *"Is this the best way to respect the constraints, requirements and best practices defined by this specification and AGENTS.md?"*
+10. Git hooks will enforce all checks automatically on commit - ensure the commit succeeds without warnings.
+11. Scan the produced code for vulnerabilities, study each finding, and fix iteratively until the code is clean.
 
 ## `/sdd`
 
