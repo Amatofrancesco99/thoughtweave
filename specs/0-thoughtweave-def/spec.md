@@ -2,9 +2,7 @@
 
 ## Table of Contents
 
-- [Meaning](#meaning)
 - [Objective](#objective)
-- [Core Philosophy](#core-philosophy)
 - [Repository Structure](#repository-structure)
 - [`CONTRIBUTING.md` Structure](#contributingmd-structure)
 - [`/init-agents-file`](#init-agents-file)
@@ -17,38 +15,11 @@
 - [Jira Integration](#jira-integration)
 - [Readme Generation](#readme-generation)
 
-## Meaning
-
-`thoughtweave` is a development workflow that puts understanding before generation. The name combines two concepts that must work together:
-
-- **Thought** - the cognitive work: intent discovery, reasoning, decision-making, surfacing hidden assumptions. The engineering thinking that happens before any code is written.
-- **Weave** - the structured process of turning that thinking into a specification, then into implementation, then into documentation. Intent and spec are woven together, not sequenced.
-
-The name is not an acronym. It is a deliberate description of what the workflow does: it weaves thought into software through a guided, iterative process with a coding agent as a thinking partner.
-
-The objective is not generating code faster. Speed is a welcome side effect, not the goal.
-
-The objective is helping developers understand problems better before implementation begins. When you understand what you are building, the code writes itself more naturally. When you do not understand, you fight prompts, regenerate outputs, and accumulate technical debt disguised as iteration.
-
-Coding agents should guide developers through a workflow that starts from intent, evolves into a specification, leads to implementation and ends with clear communication of the resulting changes. The agent is not a code generator. It is a thinking partner.
-
-The workflow can be summarized as:
-
-- **Intent** - understanding the problem, the desired outcome, the constraints and the trade-offs before writing anything.
-- **Specification** - documenting decisions, requirements, test strategy and acceptance criteria so that implementation has a clear target.
-- **Implementation** - transforming the specification into working software, knowing exactly what success looks like.
-- **Explanation** - communicating what changed, why it changed and how the behaviour evolved, so that reviewers, stakeholders and future contributors can understand the outcome without reverse-engineering the code.
+## Objective
 
 > [!IMPORTANT]
-> Intent comes first. Without intent, every subsequent step is guessing.
-
-Specifications document decisions. They are not bureaucratic artifacts. They are engineering memory.
-
-Implementation transforms decisions into software. It is the execution of a plan, not the discovery of one.
-
-Documentation explains outcomes. It closes the loop and makes the work understandable to others.
-
-## Objective
+> The vision, philosophy, and meaning of `thoughtweave` are defined in [`IDEA.md`](../../IDEA.md). Read that first.
+> This specification documents the technical structure, constraints, and behaviours of the repository.
 
 Create a GitHub repository compatible with skills.sh containing a set of reusable skills that help software engineers work with coding agents in a more deliberate and structured way.
 
@@ -60,18 +31,6 @@ npx skills add <repository>
 
 Versioned installations shall be supported through git tags for master branches and commit hashes for other branches, so that teams can pin their workflow to a specific version and upgrade intentionally rather than accidentally.
 
-The purpose of this project is not creating another AI framework. There are already plenty of those, and most of them solve problems that the average developer does not have.
-
-The purpose is codifying a workflow that has consistently helped me obtain better results from coding agents in day-to-day software engineering work. This is a collection of lessons learned from real projects, not theoretical best practices.
-
-This workflow prioritizes understanding over implementation speed. The assumption is that taking time to understand before building reduces the total time spent from idea to shipped feature, because fewer iterations are wasted on misunderstandings.
-
-Developers should spend less time fighting prompts and regenerating code and more time understanding requirements, constraints, trade-offs and desired outcomes. A prompt that clearly expresses intent produces better results on the first attempt than ten prompts that iterate blindly.
-
-Code generation is a tool. It is not the objective. It is not the craft. It is a means to an end.
-
-Understanding is the objective. The code is just a side effect of understanding what needs to be built.
-
 > [!IMPORTANT]
 > Every skill in this repository must include two layers of built-in validation:
 >
@@ -79,94 +38,6 @@ Understanding is the objective. The code is just a side effect of understanding 
 > 2. **Output validation** - after generating its output file, the skill must verify that the file contains all required sections as defined by this specification. If a required section is missing, the skill must notify the user and request confirmation before proceeding. This ensures that the output is always complete and that omissions are intentional rather than accidental.
 >
 > Both layers are mandatory. A skill that skips either validation is non-compliant with this specification.
-
-## Core Philosophy
-
-> [!IMPORTANT]
-> Before building anything, understand why it should exist.
->
-> This sentence is not a decoration. It is the single most important rule in this repository. Every workflow, every skill, every generated document exists to serve this principle.
-
-> [!WARNING]
-> Most software problems are not implementation problems. When you look at a failing project, a delayed feature or a buggy release, the root cause is rarely "we could not write the code." The root cause is almost always "we did not understand the problem well enough."
->
-> They are understanding problems.
-
-Requirements are often unclear. Stakeholders say one thing and mean another. Documents are incomplete. Specifications are written after implementation rather than before.
-
-Constraints are often implicit. Performance requirements, security boundaries, integration limitations - these are discovered during implementation rather than defined beforehand.
-
-> [!WARNING]
-> Assumptions are rarely challenged. Teams assume they understand what the user needs. They assume the architecture is correct. They assume the framework will handle edge cases. And then they are surprised when reality does not match their assumptions.
-
-Coding agents can generate code remarkably well. The current generation of AI tools can produce working code for a surprisingly wide range of tasks. But that is not the hard part of software engineering.
-
-Software engineering is not the act of generating code. Currently, generating code is the easiest part of the job. The hard parts are understanding the problem, designing the solution, evaluating trade-offs, ensuring maintainability and communicating decisions to other humans.
-
-Software engineering is the process of understanding problems and transforming them into maintainable solutions. Code generation is just one step in that process, and arguably not the most important one.
-
-This repository exists to help developers use coding agents as engineering tools rather than treating them as magic boxes. A coding agent is not a replacement for thinking. It is a tool that helps you think faster and more clearly, provided you know what you want to achieve.
-
-### Intent First
-
-Every workflow promoted by this repository starts from intent. Not from code. Not from architecture. Not from frameworks. From intent.
-
-Before discussing architecture, frameworks, implementation details or technologies, the underlying problem should be understood. This seems obvious, but it is rarely practiced. Most development conversations start with "which framework should we use" rather than "what problem are we solving."
-
-The repository encourages developers and coding agents to ask:
-
-- *Why are we doing this? What is the actual motivation behind this change? Is it a real requirement or an assumption?*
-- *Which problem are we trying to solve? Can we state it in one sentence without mentioning any technology?*
-- *Is this the right solution? Are there alternative approaches that might be simpler, cheaper or more maintainable?*
-- *Which constraints exist? What are the boundaries within which we must operate?*
-- *Which trade-offs are acceptable? Every decision involves trade-offs. Which ones are we willing to accept?*
-
-A good specification starts with understanding. If the specification does not clearly explain why something exists, then the implementation will be built on an unclear foundation.
-
-A good implementation starts with a good specification. When the specification is clear, the implementation is straightforward. When the specification is vague, the implementation becomes a process of discovery - and discovery during implementation is expensive.
-
-### Slow Thinking Over Fast Guessing
-
-The repository promotes deliberate engineering over rapid iteration. This is not because iteration is bad. It is because iteration without understanding is just random walk.
-
-Moving quickly without understanding usually creates more work rather than less. A feature that takes three hours to implement but requires two days of bug fixes and refactoring was not implemented in three hours. It was implemented in two days and three hours.
-
-> [!CAUTION]
-> Many implementation mistakes are not implementation mistakes. When you look at a bug, ask yourself: was the code written incorrectly, or was the problem misunderstood? In my experience, the second case is far more common.
->
-> They are understanding mistakes.
-
-Taking additional time to understand intent, constraints and trade-offs before implementation often leads to:
-
-- **fewer iterations** - because the first attempt is more likely to be correct;
-- **fewer regressions** - because edge cases are considered before implementation, not after;
-- **fewer misunderstandings** - because the specification is explicit and can be reviewed before code is written;
-- **better software** - because design decisions are made deliberately rather than reactively.
-
-The objective is not being slow. The objective is avoiding avoidable mistakes. Speed is important, but speed without direction is just noise.
-
-> [!TIP]
-> Think first.
->
-> Build second.
->
-> Refine third.
-
-### Engineering Is Thinking
-
-Software engineering is not the act of writing code. Writing code is a mechanical activity. It can be automated, and increasingly it is being automated. But engineering is not automation.
-
-Writing code is only one part of the process. It is the part that happens after the difficult work of understanding, designing and deciding has been completed.
-
-Engineering starts when we attempt to understand a problem. The moment you ask "why does this need to exist" or "what happens if this fails" or "how will this be maintained" - that is engineering. The code comes later.
-
-The better we understand the problem, the less code we often need. The best solutions are often the simplest ones. But simplicity requires understanding. You cannot simplify something you do not fully understand.
-
-Coding agents should help developers write code. That is their primary function, and they are good at it.
-
-They should also help developers think. A good coding agent does not just generate code. It asks questions. It challenges assumptions. It suggests alternatives. It helps the developer reason about the problem before committing to a solution.
-
-This repository intentionally prioritizes understanding over implementation speed. If you want to generate code quickly without understanding what you are building, there are plenty of tools that will help you do that. This repository is not one of them.
 
 ## Repository Structure
 
