@@ -1,3 +1,0 @@
-
-Recall that crucial part:
-- For writing docs and features - and especially when incrementing an already-started codebase - the agent must have access to the repository and codebase. Without reading the existing code, it cannot understand conventions, module boundaries, or architectural decisions. All three skills depend on the agent's ability to read files, inspect structure, and analyze existing patterns: /init-agents-file (inspects repo structure and stack), /sdd (context discovery and codebase inspection), and /changes (implementation validation against the spec).
