@@ -111,6 +111,13 @@ REPO_STRUCTURE.md                     ✓
 - `.githooks/` - git hooks that enforce skill integrity and workflow correctness
 - `docs/` - additional documentation and references (future)
 - `examples/` - usage examples for different coding agents and workflows (future)
+- `skills/<name>/SKILL.md` - each skill file must begin with a YAML front matter block containing `name:` and `description:` fields. This provides metadata for tooling and discovery. Example:
+  ```yaml
+  ---
+  name: example-skill
+  description: Brief description of what the skill does and when to use it.
+  ---
+  ```
 - `skills/changes/` - documents what changed and why after implementation (current)
 - `skills/init-agents-file/` - generates and maintains the `AGENTS.md` file (current). Includes `references/` directory with pre-loaded documentation for configurable areas (e.g., the [Antirez commenting philosophy](https://antirez.com/news/124) article for the **code documentation** area)
 - `skills/init-agents-file/references/` - optional per-skill directory containing documentation files that the skill loads as needed instead of fetching from the web. Files are converted to text-only markdown. Currently contains `antirez-commenting-philosophy.md`
