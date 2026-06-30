@@ -1817,7 +1817,7 @@ The README should explain how requirements can originate from Jira while making 
 
 The workflow: **Intent → Specification → Implementation → Explanation**.
 
-For the full philosophy and vision, read [IDEA.md](IDEA.md). For the complete repository layout, read [REPO_STRUCTURE.md](REPO_STRUCTURE.md).
+For the full philosophy and vision, read [`IDEA.md`](IDEA.md). For the complete repository layout, read [`REPO_STRUCTURE.md`](REPO_STRUCTURE.md).
 
 ### What Makes It Different
 
@@ -1849,7 +1849,7 @@ For the full philosophy and vision, read [IDEA.md](IDEA.md). For the complete re
 7. **Lightweight, zero lock-in** - Few skills, `npx skills add`, no runtime, no additional software to install.
 8. **Security boundary** - git hooks protect public skills from prompt injection.
 
-For the full pro/cons, see [IDEA.md](IDEA.md#comparison-with-competitors).
+For the full pro/cons, see [`IDEA.md`](IDEA.md#comparison-with-competitors).
 
 ### How to Use It
 
