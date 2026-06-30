@@ -1235,7 +1235,7 @@ terraform/
 ├── main.tf                  # Root variables + module call to github
 ├── terraform.tfvars         # Auto-loaded default values (loaded automatically by Terraform)
 └── github/                  # Child module: GitHub resource definitions
-    ├── providers.tf          # Provider config (terraform ~> 1.15, integrations/github ~> 6.5)
+    ├── providers.tf          # Provider config (terraform ~> 1.5, integrations/github ~> 6.5)
     ├── variables.tf          # Module variables (repository_name, branch_protection)
     └── main.tf               # data.github_repository + github_repository_ruleset
 ```
@@ -1246,7 +1246,7 @@ terraform/
 
 ```hcl
 terraform {
-  required_version = "~> 1.15"
+  required_version = "~> 1.5"
   
   required_providers {
     github = {
@@ -1427,7 +1427,7 @@ This file is loaded automatically by Terraform (no `-var-file` flag needed). The
 #### `terraform/README.md`
 
 The README should document:
-- prerequisites (Terraform >= 1.15, GitHub PAT);
+- prerequisites (Terraform >= 1.5, GitHub PAT);
 - quick start (`export GITHUB_TOKEN`, `terraform init`, `terraform apply`);
 - variable reference tables for `repository_name` and `branch_protection` with types and descriptions;
 - authentication section explaining that `GITHUB_TOKEN` env var is used;

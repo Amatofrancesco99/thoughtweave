@@ -35,11 +35,6 @@ thoughtweave/
 │   ├── 0-thoughtweave-def/    # The specification for `thoughtweave` itself
 │   │   ├── changes.md         # Bootstrap changes document
 │   │   └── spec.md            # Authoritative specification
-│   │
-│   └── example/             # Example spec (placeholder for demo)
-│       ├── changes.md
-│       ├── draft.md         # Optional raw scratch notes
-│       └── spec.md
 │
 ├── terraform/               # Infrastructure as Code
 │   ├── github/              # Child module: GitHub resource definitions
@@ -94,7 +89,7 @@ Currently three skills covering the lifecycle of a software change. More will be
 
 - **[`init-agents-file/`](./skills/init-agents-file/)** - `/init-agents-file` - Generates and maintains `AGENTS.md`. Branching logic: if repo is empty, proposes standard best practices; if repo exists, inspects codebase (structure, stack) then conducts a sequential interview (one question at a time). The generated `AGENTS.md` includes a workflow checklist that mandates vulnerability scanning after implementation. Configurable areas presented as multiple selection (security, safety, maintainability, readability, simplicity, testing, architecture, OOP principles, GoF patterns, coding style, technology stack, operational domain, repo-specific constraints). Contains a `references/` directory with pre-loaded documentation (e.g., the commenting philosophy article for the **code documentation** area). Supports Claude via `CLAUDE.md` symlink. Validates all required sections are present.
   - **[`SKILL.md`](./skills/init-agents-file/SKILL.md)**
-  - **[`references/`](./skills/init-agents-file/references/)** - Pre-loaded reference documentation that the skill loads as needed instead of fetching from the web. Files are text-only markdown. Currently contains `commenting-philosophy.md` (the [Antirez commenting philosophy](https://antirez.com/news/124) article).
+  - **[`references/`](./skills/init-agents-file/references/)** - Pre-loaded reference documentation that the skill loads as needed instead of fetching from the web. Files are text-only markdown. Currently contains `antirez-commenting-philosophy.md` (the [Antirez commenting philosophy](https://antirez.com/news/124) article).
 
 - **[`sdd/`](./skills/sdd/)** - `/sdd` - The central skill. Transforms ideas, tickets, or feature requests into implementation-ready specifications. Never starts writing immediately - first assesses task complexity (light or deep mode), then asks three ordered questions (context inheritance, output location, web search), then assesses user competency per area (Expert/Comfortable/New), then enters a fluid Discovery phase (alternating problem exploration and technical deep-dive, intent labels: `[Problem]`, `[Technical]`, `[Decision]`). Produces specs with Objective, Scope, Decisions & Compromises (including hidden assumptions), Requirements & Best Practices, Tests, Acceptance Criteria, and References. Includes a Design TDD subskill for Given-When-Then test design. The generated spec includes **Mermaid diagrams** (hand-drawn look, pastel palette) as native citizens. The output spec quality is independent of the user's starting knowledge - the competency assessment and teaching mode compensate for gaps. Validates all sections are present.
   - **[`SKILL.md`](./skills/sdd/SKILL.md)** - The main SDD skill. Includes the Design TDD subskill as a nested step.
@@ -109,11 +104,6 @@ Currently three skills covering the lifecycle of a software change. More will be
   - **[`changes.md`](./specs/0-thoughtweave-def/changes.md)** - Bootstrap changes document
   - **[`spec.md`](./specs/0-thoughtweave-def/spec.md)** - Authoritative specification
 
-- **[`example/`](./specs/example/)** - Example spec (placeholder for demo)
-  - **[`changes.md`](./specs/example/changes.md)**
-  - **[`draft.md`](./specs/example/draft.md)** (*optional*) - Raw scratch notes, brainstorming output, half-formed ideas that preceded the spec. Not validated, not required. Preserves the original intent so future readers can compare what was asked against what was generated after deep specification generation process.
-  - **[`spec.md`](./specs/example/spec.md)**
-
 Default structure per feature:
 ```
 specs/
@@ -124,7 +114,7 @@ specs/
 
 ### [`terraform/`](./terraform/) (Branch protection ruleset)
 
-This directory is not checked into the repository - it is created on the fly by a coding agent following the [Terraform section of the specification](specs/0-thoughtweave-def/spec.md#terraform). When you ask a coding agent to implement that part of the spec, it will generate the exact folder structure and files documented there.
+This directory is checked into the repository and contains all the Infrastructure as Code configuration files as defined in the [Terraform section of the specification](specs/0-thoughtweave-def/spec.md#terraform).
 
 What this configuration does, in plain English: it lets you manage branch protection rules for this repository through Terraform. The repository itself already exists and is **not** managed by Terraform - only the ruleset is. Instead of clicking through GitHub's UI to lock down the master branch, you run `terraform apply` with your GitHub token and it all happens automatically.
 
@@ -142,7 +132,24 @@ See the [Terraform section in the spec](specs/0-thoughtweave-def/spec.md#terrafo
 
 ### [`tests/`](./tests/) (Validation)
 
-Tests validate the repository structure, skill content integrity, philosophical boundaries, artifact schema, and terraform invariants. Since skills are plain markdown for LLMs (not executable code), tests perform structural and content pattern checks rather than functional execution. All tests use Node.js with `vitest` - no shell scripts or Python. Runnable via `npm test`. See `spec.md` for the full list of test files and their validation rules.
+Tests validate the repository structure, skill content integrity, philosophical boundaries, artifact schema, githook content, and terraform invariants. Since skills are plain markdown for LLMs (not executable code), tests perform structural and content pattern checks rather than functional execution. All tests use Node.js with `vitest` - no shell scripts or Python. Runnable via `npm test` from the `tests/` directory.
+
+**Test files:**
+
+- **`structural/test_layout.js`** - Verifies directory and file existence, symlink correctness (CLAUDE.md -> AGENTS.md), required root files, skill paths, githooks presence, and .gitignore entries.
+- **`content/test_skills_sections.js`** - Validates each skill (SDD, Changes, Init-agents-file) contains all required sections: adaptive questioning, Discovery phase intent labels, ordered questions, competency assessment, assumption challenging, hidden assumptions surfacing, Mermaid diagram configuration, GitHub alert tags, output validation, and workflow diagrams. Also validates the Design TDD subskill file content (Given-When-Then structure, coverage requirements, asking permission).
+- **`content/test_preconditions.js`** - Verifies each skill has the required pre-condition check logic: init-agents-file detects existing AGENTS.md and CLAUDE.md symlink issues, SDD warns on missing AGENTS.md, Changes refuses to proceed without spec.md.
+- **`content/test_design_tdd_exists.js`** - Checks design-tdd.md exists at `skills/sdd/design-tdd.md` and is referenced by the SDD skill.
+- **`content/test_skills_ref_validate.js`** - Runs `skills-ref validate` on all three skill directories to verify frontmatter and naming conventions. Also manually validates frontmatter for `design-tdd.md` (standalone file, not a directory).
+- **`compliance/test_philosophical_boundaries.js`** - Enforces philosophical integrity: SDD must position agent as thinking partner (not executor), keep developer cognitively engaged, not accept vague requirements, not generate implementation code. Changes must target multiple audiences, flag unimplemented/untracked behaviour, not assume correctness without verification. All skills must surface hidden assumptions and keep developer at centre.
+- **`compliance/test_mermaid_style.js`** - Validates that every Mermaid diagram in every `.md` file uses the required style: init config with `theme: base, look: handDrawn, layout: dagre` and a wrapping `subgraph bg[" "]` for dark mode compatibility. Scans all markdown files recursively, ignoring `node_modules`, `.git`, `.skills`, and `.terraform`.
+- **`artifacts/test_artifact_structure.js`** - Validates output file schema: spec.md contains all required sections (Objective, Repository Structure, Terraform, Testing, etc.), changes.md contains Why/Overview/Changes/Tests/Summary.
+- **`githooks/test_githook_content.js`** - Checks pre-commit hook contains: spec/changes sibling validation, section validation, terraform fmt, AGENTS.md deletion warning, design-tdd.md existence check, em-dash replacement script, and skills-ref validation. Checks pre-push hook contains: skills immutability check, changes.md without spec.md blocking, section validation.
+- **`terraform/test_terraform_invariants.js`** - Ensures terraform variables, ruleset configuration, and .gitignore state entries remain unchanged: branch_protection field completeness, main.tf uses variable references (not hardcoded values), root/child module schema alignment, tfvars ruleset values match defaults, gitignore terraform entries preserved.
+- **`replace-em-dashes.js`** - Utility script run by pre-commit hook. Recursively scans all `.md` files, replaces em dashes (U+2014) with regular dashes (U+002D). No dependencies beyond Node.js built-ins.
+- **`package.json`** - Node.js project configuration with vitest as test runner. Run via `npm test`.
+- **`vitest.config.js`** - Vitest configuration for test file discovery.
+- **`README.md`** - How to run tests and test category descriptions.
 
 ### [`.gitignore`](./.gitignore)
 
