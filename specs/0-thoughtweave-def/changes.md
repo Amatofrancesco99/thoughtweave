@@ -21,7 +21,7 @@ This is the initial repository setup. There is no deployed software, no migratio
 
 - **Git hooks activate on clone**: every clone must run `git config core.hooksPath .githooks/` (documented in `CONTRIBUTING.md`). If a contributor forgets, hooks are silently inactive. The spec accounts for this by noting that the server-side GitHub ruleset (Terraform) enforces the same constraints at the API level, so hooks are complementary, not critical.
 - **Terraform state**: if a contributor runs `terraform apply` locally, state files are written to `terraform/`. The `.gitignore` prevents committing them, but a stale `.terraform/` directory could remain locally. No production impact.
-- **GitHub Actions on push to master**: the release workflow (`release.yml`) triggers on push to master. Until the first real release, the workflow will attempt to tag but skip gracefully if no prior tag exists (the script checks `git describe --tags --abbrev=0` and exits if no tag found).
+- **GitHub Actions on push to main**: the release workflow (`release.yml`) triggers on push to main. Until the first real release, the workflow will attempt to tag but skip gracefully if no prior tag exists (the script checks `git describe --tags --abbrev=0` and exits if no tag found).
 
 ## Changes
 
@@ -47,7 +47,7 @@ This is the initial repository setup. There is no deployed software, no migratio
 
 ### GitHub & Hooks
 
-- [`.github/workflows/release.yml`](../../.github/workflows/release.yml) - GitHub Actions workflow triggered on push to master and workflow_dispatch. Accepts `version_bump` input (major/minor/patch, default patch). Reads latest tag, increments semver, creates tag, publishes GitHub Release with auto-generated notes.
+- [`.github/workflows/release.yml`](../../.github/workflows/release.yml) - GitHub Actions workflow triggered on push to main and workflow_dispatch. Accepts `version_bump` input (major/minor/patch, default patch). Reads latest tag, increments semver, creates tag, publishes GitHub Release with auto-generated notes.
 - [`.githooks/pre-commit`](../../.githooks/pre-commit) - Pre-commit hook: replaces em dashes (U+2014) in .md files with regular dashes, validates all skills have valid refs to sections in their own SKILL.md, runs `terraform fmt -recursive`, validates spec sections, runs content tests.
 - [`.githooks/pre-push`](../../.githooks/pre-push) - Pre-push hook: runs full test suite (`npm test` in `tests/`).
 

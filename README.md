@@ -138,14 +138,14 @@ The first released version is `0.1.0`.
 - **Other branches**: versions identified by commit hashes. Install via `npx skills add <repository>#<commit-hash>`.
 
 > [!CAUTION]
-> Releases are created via GitHub Actions on push to `master`. The workflow in [`.github/workflows/release.yml`](.github/workflows/release.yml) accepts a `workflow_dispatch` input called `version_bump` with three options - `major`, `minor`, `patch` (default) - to control which semver component to increment. On push to `master` the workflow reads the latest git tag, increments the specified component, creates a new tag, and publishes a GitHub Release with auto-generated notes. If the latest commit already has a tag, the workflow skips to prevent duplicate releases.
+> Releases are created via GitHub Actions on push to `main`. The workflow in [`.github/workflows/release.yml`](.github/workflows/release.yml) accepts a `workflow_dispatch` input called `version_bump` with three options - `major`, `minor`, `patch` (default) - to control which semver component to increment. On push to `main` the workflow reads the latest git tag, increments the specified component, creates a new tag, and publishes a GitHub Release with auto-generated notes. If the latest commit already has a tag, the workflow skips to prevent duplicate releases.
 
 ## Contributing
 
 Contributions are welcome! See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full guide on branch strategy, PR workflow, local development setup, and how to use the skills to help you contribute.
 
 > [!IMPORTANT]
-> Only repository owners can merge and approve pull requests to `master`. The default branch is protected by a **server-side ruleset** configured via Terraform (see [`terraform/`](terraform/)). This ruleset blocks direct pushes, force pushes, and branch deletion - it cannot be bypassed locally with `--no-verify`.
+> Only repository owners can merge and approve pull requests to `main`. The default branch is protected by a **server-side ruleset** configured via Terraform (see [`terraform/`](terraform/)). This ruleset blocks direct pushes, force pushes, and branch deletion - it cannot be bypassed locally with `--no-verify`.
 
 ## License
 

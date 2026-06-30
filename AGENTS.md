@@ -38,7 +38,7 @@ When contributing to this repository, follow these steps in order:
 2. [OPTIONAL] Read the first specification at `specs/0-thoughtweave-def/spec.md` to understand the full structure, constraints, and testing expectations.
 3. Inspect existing implementations before introducing new ones - check `skills/`, `tests/`, and `specs/` for relevant patterns.
 4. If the change is significant, run `/sdd` to create a specification first.
-5. After the specification is ready, ask the user: *"Do you want to continue on an existing branch or create a new one from master? Merging to master requires a pull request, so working on a feature branch is required."* If the user chooses a new branch, create it from master with the chosen name.
+5. After the specification is ready, ask the user: *"Do you want to continue on an existing branch or create a new one from main? Merging to main requires a pull request, so working on a feature branch is required."* If the user chooses a new branch, create it from main with the chosen name.
 6. Implement the specification on the selected branch, then run `/changes` to document the outcome.
 7. Recall that:
    - repo structure shall be simple, maintainable, readable, well separated concepts and organized.

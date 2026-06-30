@@ -40,7 +40,7 @@ Tests are executed automatically by git hooks on every commit and push - no manu
 
 ## Versioning & Releases
 
-When code is merged to `master` (via PR), a GitHub Actions workflow (`.github/workflows/release.yml`) runs automatically. The workflow accepts a `workflow_dispatch` input named `version_bump` (options: `major`, `minor`, `patch`, default: `patch`) to control which semver component to increment. It reads the latest git tag, increments the selected component, creates a new tag, and publishes a GitHub Release with auto-generated notes. Pushes to any other branch never trigger a release.
+When code is merged to `main` (via PR), a GitHub Actions workflow (`.github/workflows/release.yml`) runs automatically. The workflow accepts a `workflow_dispatch` input named `version_bump` (options: `major`, `minor`, `patch`, default: `patch`) to control which semver component to increment. It reads the latest git tag, increments the selected component, creates a new tag, and publishes a GitHub Release with auto-generated notes. Pushes to any other branch never trigger a release.
 
 This means contributors don't need to manage versions manually. Users install specific versions via `npx skills add <repository>@v<tag>`.
 

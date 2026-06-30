@@ -29,7 +29,7 @@ The repository should be installable through:
 npx skills add <repository>
 ```
 
-Versioned installations shall be supported through git tags for master branches and commit hashes for other branches, so that teams can pin their workflow to a specific version and upgrade intentionally rather than accidentally.
+Versioned installations shall be supported through git tags for main branches and commit hashes for other branches, so that teams can pin their workflow to a specific version and upgrade intentionally rather than accidentally.
 
 > [!IMPORTANT]
 > Every skill in this repository must include two layers of built-in validation:
@@ -107,7 +107,7 @@ README.md                             x
 REPO_STRUCTURE.md                     ✓
 ```
 
-- `.github/workflows/release.yml` - GitHub Actions workflow for automatic releases on push to master, with `workflow_dispatch` input (`version_bump`: `major`/`minor`/`patch`) to control semver increment
+- `.github/workflows/release.yml` - GitHub Actions workflow for automatic releases on push to main, with `workflow_dispatch` input (`version_bump`: `major`/`minor`/`patch`) to control semver increment
 - `.githooks/` - git hooks that enforce skill integrity and workflow correctness
 - `docs/` - additional documentation and references (future)
 - `examples/` - usage examples for different coding agents and workflows (future)
@@ -186,9 +186,9 @@ Describe the expected workflow for pull requests:
 
 #### Versioning & Releases
 
-Explain that when code is merged to `master` (via PR), a GitHub Actions workflow (`.github/workflows/release.yml`) runs automatically. The workflow accepts a `workflow_dispatch` input named `version_bump` (options: `major`, `minor`, `patch`, default: `patch`) to control which semver component to increment. It reads the latest git tag, increments the selected component, creates a new tag, and publishes a GitHub Release with auto-generated notes. Pushes to any other branch never trigger a release.
+Explain that when code is merged to `main` (via PR), a GitHub Actions workflow (`.github/workflows/release.yml`) runs automatically. The workflow accepts a `workflow_dispatch` input named `version_bump` (options: `major`, `minor`, `patch`, default: `patch`) to control which semver component to increment. It reads the latest git tag, increments the selected component, creates a new tag, and publishes a GitHub Release with auto-generated notes. Pushes to any other branch never trigger a release.
 
-This means contributors don't need to manage versions manually - versioning is fully automated on merge to `master`. Users install specific versions via `npx skills add <repository>@v<tag>`.
+This means contributors don't need to manage versions manually - versioning is fully automated on merge to `main`. Users install specific versions via `npx skills add <repository>@v<tag>`.
 
 #### What Needs Contributors
 
@@ -607,7 +607,7 @@ When contributing to this repository, the agent must follow these steps in order
 2. [OPTIONAL] Read [first specification](/specs/0-thoughtweave-def/spec.md) to understand the full structure, constraints, and testing expectations.
 3. Inspect existing implementations before introducing new ones - check `skills/`, `tests/`, and `specs/` for relevant patterns.
 4. If the change is significant, run `/sdd` to create a specification first.
-5. After the specification is ready, ask the user: *"Do you want to continue on an existing branch or create a new one from master? Merging to master requires a pull request, so working on a feature branch is required."* If the user chooses a new branch, create it from master with the chosen name.
+5. After the specification is ready, ask the user: *"Do you want to continue on an existing branch or create a new one from main? Merging to main requires a pull request, so working on a feature branch is required."* If the user chooses a new branch, create it from main with the chosen name.
 6. Implement the specification on the selected branch, then run `/changes` to document the outcome.
 7. Recall that:
     - repo structure shall be simple, maintainable, readable, well separed concepts and organized
@@ -1573,8 +1573,8 @@ The `github_repository_ruleset` enforces the following on the default branch:
 
 This mirrors the intent defined in `IDEA.md`: only repository owners can push to the default branch, and every change must be reviewed. The `IDEA.md` states:
 
-- "only repository owners can/will push to master and merge pull requests"
-- "the master branch is always reviewed"
+- "only repository owners can/will push to main and merge pull requests"
+- "the main branch is always reviewed"
 
 The ruleset enforces these principles at the GitHub server level - it cannot be bypassed by `--no-verify` on a commit.
 
@@ -2001,7 +2001,7 @@ The first released version is `0.1.0`.
 - **Master branch**: versions are identified by semantic versioning tags (e.g., `v0.1.0`, `v0.2.0`). Install via `npx skills add <repository>@v0.1.0`.
 - **Other branches**: versions are identified by commit hashes. Install via `npx skills add <repository>#<commit-hash>`.
 
-Releases are created via GitHub Actions on push to `master`. The workflow in [`.github/workflows/release.yml`](.github/workflows/release.yml) accepts a `workflow_dispatch` input called `version_bump` with three options - `major`, `minor`, `patch` (default) - to control which semver component to increment. On push to `master` the workflow reads the latest git tag, increments the specified component, creates a new tag, and publishes a GitHub Release with auto-generated notes. If the latest commit already has a tag, the workflow skips to prevent duplicate releases.
+Releases are created via GitHub Actions on push to `main`. The workflow in [`.github/workflows/release.yml`](.github/workflows/release.yml) accepts a `workflow_dispatch` input called `version_bump` with three options - `major`, `minor`, `patch` (default) - to control which semver component to increment. On push to `main` the workflow reads the latest git tag, increments the specified component, creates a new tag, and publishes a GitHub Release with auto-generated notes. If the latest commit already has a tag, the workflow skips to prevent duplicate releases.
 
 ### License
 

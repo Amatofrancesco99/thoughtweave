@@ -4,7 +4,7 @@
 thoughtweave/
 ├── .github/                 # GitHub Actions workflows
 │   └── workflows/
-│       └── release.yml      # Auto-release on push to master
+│       └── release.yml      # Auto-release on push to main
 ├── .githooks/               # Security hooks for skill file + workflow integrity
 │   ├── pre-commit           # Blocks commits with unauthorized/invalid skill changes; validates spec/changes sections; runs tests
 │   └── pre-push             # Same as pre-commit, plus enforces spec/changes pairing
@@ -60,7 +60,7 @@ thoughtweave/
 
 ### [`.github/`](./.github/) (CI/CD)
 
-- **[`.github/workflows/release.yml`](./.github/workflows/release.yml)** - GitHub Actions workflow that creates a new release when code is pushed to `master` only (no other branch triggers a version bump). Reads the latest git tag, increments the version, creates a new tag, and publishes a GitHub Release with auto-generated notes from conventional commits.
+- **[`.github/workflows/release.yml`](./.github/workflows/release.yml)** - GitHub Actions workflow that creates a new release when code is pushed to `main` only (no other branch triggers a version bump). Reads the latest git tag, increments the version, creates a new tag, and publishes a GitHub Release with auto-generated notes from conventional commits.
 
 ### [`.githooks/`](./.githooks/) (Security)
 
@@ -116,7 +116,7 @@ specs/
 
 This directory is checked into the repository and contains all the Infrastructure as Code configuration files as defined in the [Terraform section of the specification](specs/0-thoughtweave-def/spec.md#terraform).
 
-What this configuration does, in plain English: it lets you manage branch protection rules for this repository through Terraform. The repository itself already exists and is **not** managed by Terraform - only the ruleset is. Instead of clicking through GitHub's UI to lock down the master branch, you run `terraform apply` with your GitHub token and it all happens automatically.
+What this configuration does, in plain English: it lets you manage branch protection rules for this repository through Terraform. The repository itself already exists and is **not** managed by Terraform - only the ruleset is. Instead of clicking through GitHub's UI to lock down the main branch, you run `terraform apply` with your GitHub token and it all happens automatically.
 
 The most important piece is the **branch protection ruleset**. It enforces that:
 
@@ -124,7 +124,7 @@ The most important piece is the **branch protection ruleset**. It enforces that:
 - Nobody can force-push or delete the default branch - history stays immutable.
 - Repository admins can still bypass these rules when needed (e.g., emergency hotfixes) because they're configured as bypass actors with role ID 5.
 
-This mirrors the security model described in [IDEA.md](IDEA.md): only repository owners merge to master, and every merge is reviewed. Before this ruleset existed, the only protection was the git hooks in `.githooks/` - which are client-side and can be skipped with `--no-verify`. The Terraform ruleset adds a **server-side enforcement** that cannot be bypassed locally.
+This mirrors the security model described in [IDEA.md](IDEA.md): only repository owners merge to main, and every merge is reviewed. Before this ruleset existed, the only protection was the git hooks in `.githooks/` - which are client-side and can be skipped with `--no-verify`. The Terraform ruleset adds a **server-side enforcement** that cannot be bypassed locally.
 
 The provider reads your `GITHUB_TOKEN` environment variable - no secrets are stored in the repository. State is kept local and excluded from git via `.gitignore`.
 
