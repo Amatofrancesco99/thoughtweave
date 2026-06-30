@@ -338,6 +338,8 @@ The resulting document should become the engineering contract between developers
 
 ### Behaviour
 
+The core mechanism of the init-agents-file skill is a conversational question-and-answer process. The skill asks the user a sequence of questions, one at a time, to progressively define the content of `AGENTS.md`. Each answer directly shapes what gets written into the file - the questions are not peripheral information gathering, they are the primary mechanism for defining the file's content. The resulting `AGENTS.md` is a direct reflection of the user's answers.
+
 After understanding the overall goal, the skill behaves differently depending on whether the repository is empty or already contains code. The overall goal from the previous step informs which aspects of the codebase are most relevant to inspect.
 
 **If the repository is empty:**
@@ -1884,7 +1886,7 @@ For the full philosophy and vision, read [IDEA.md](IDEA.md). For the complete re
 
 `thoughtweave` shifts from `spec → implement` to **`intent → questioning → understanding → spec → implement`**.
 
-| Aspect | Spec Kit | superpowers | thoughtweave |
+| Aspect | [`spec-kit`](https://github.com/github/spec-kit) | [`superpowers`](https://github.com/obra/superpowers/tree/main) | `thoughtweave` (this repo) |
 |---|---|---|---|
 | **Center of the workflow** | The specification (executable) | Process + TDD | The intent |
 | **Primary goal** | Build high-quality software faster | Automate the dev cycle autonomously | Understand the problem deeply |
@@ -1893,8 +1895,8 @@ For the full philosophy and vision, read [IDEA.md](IDEA.md). For the complete re
 | **Hidden assumptions** | Assumptions section + `[NEEDS CLARIFICATION]` markers | Not addressed | Mandatory - documented explicitly |
 | **AGENTS.md** | Managed by `agent-context` extension | Static template | Built through conversational interviews |
 | **Specs lifecycle** | Permanent per feature | Design docs → implemented | Permanent engineering memory |
-| **Post-implementation** | `/speckit.converge` + community extensions | Not addressed | Dedicated `/changes` skill |
-| **Learning support** | None in core - community extensions | Not addressed | Discovery phase built into `/sdd` |
+| **Post-implementation** | Not addressed | Not addressed | Dedicated `/changes` skill |
+| **Learning support** | Not addressed | Not addressed | Discovery phase built into `/sdd` |
 | **Who writes code** | The AI agent via `/speckit.implement` | Subagents dispatched autonomously | The developer, guided by the spec |
 | **Skill count** | 11 built-in + extension ecosystem | 14 | 3 |
 | **Maturity** | Production (GitHub, 30+ integrations) | Production v6.0.3 | v0.1.0 - Initial release |
