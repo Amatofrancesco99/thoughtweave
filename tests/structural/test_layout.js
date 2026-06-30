@@ -41,7 +41,7 @@ describe('Repository Structure', () => {
     const skills = [
       'skills/changes/SKILL.md',
       'skills/init-agents-file/SKILL.md',
-      'skills/init-agents-file/references/antirez-commenting-philosophy.md',
+      'skills/init-agents-file/references/commenting-philosophy.md',
       'skills/sdd/SKILL.md',
       'skills/sdd/design-tdd.md'
     ];

@@ -91,7 +91,7 @@ Use GitHub alert tags (`> [!IMPORTANT]`, `> [!WARNING]`, `> [!TIP]`, `> [!NOTE]`
 
 ### Skill References
 
-The skill includes a `references/` directory at `skills/init-agents-file/references/` containing pre-loaded documentation. When the user selects the **code documentation** configurable area, load `references/antirez-commenting-philosophy.md` instead of fetching it from the web. This file contains the full [Antirez commenting philosophy](https://antirez.com/news/124) article, which classifies comments into nine types and explains why comments should lower cognitive load.
+The skill includes a `references/` directory at `skills/init-agents-file/references/` containing pre-loaded documentation. When the user selects the **code documentation** configurable area, load `references/commenting-philosophy.md` instead of fetching it from the web. This file presents a practical philosophy of code comments, covering why comments matter, common categories (intent, boundary, summary, reference, teacher), and which types to avoid.
 
 ### Claude Compatibility
 
