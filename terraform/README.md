@@ -9,6 +9,9 @@ This directory contains Infrastructure as Code configuration for managing the `t
 
 ## Quick Start
 
+> [!CAUTION]
+> The `terraform apply` command requires the GitHub repository to be **public**. Until the repository is made public, Terraform operations will fail with authorization errors.
+
 ```shell
 cd terraform
 export GITHUB_TOKEN=ghp_xxx
