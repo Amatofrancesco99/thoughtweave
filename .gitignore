@@ -3,6 +3,7 @@ node_modules/
 .skills/
 *.log
 *TODO*
+*env*
 
 # Terraform - local cache and state files (never commit)
 .terraform/
