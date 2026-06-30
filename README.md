@@ -137,9 +137,7 @@ Start your preferred coding agent in web mode and use the slash commands ([`/ini
 
 ## Versioning & Release
 
-- **Latest version**: install via `npx skills add Amatofrancesco99/thoughtweave` (always gets the latest release).
-- **Specific version**: install via `npx skills add Amatofrancesco99/thoughtweave@v<tag>` (e.g., `@v0.1.1`).
-- **Commit-specific**: install via `npx skills add Amatofrancesco99/thoughtweave#<commit-hash>`.
+Install via `npx skills add Amatofrancesco99/thoughtweave`.
 
 > [!CAUTION]
 > Releases are created via GitHub Actions on push to `main`. The workflow in [`.github/workflows/release.yml`](.github/workflows/release.yml) accepts a `workflow_dispatch` input called `version_bump` with three options - `major`, `minor`, `patch` (default) - to control which semver component to increment. On push to `main` the workflow reads the latest git tag, increments the selected component, creates a new tag, and publishes a GitHub Release with auto-generated notes. If the latest commit already has a tag, the workflow skips to prevent duplicate releases.
