@@ -11,7 +11,7 @@
 </pre>
 <strong>Turn any coding agent into your favourite mental sparring companion. <br>Define (team) conventions, write intent-driven specs, gain knowledge while composing specs, know what changed.</strong>
 <br>
-<em>Simple, lightweight, and easy to use. Few skills. No external dependencies. No coding agent lock-in.</em>
+<em>Simple, lightweight, and easy to use. Few skills. No additional software to install. No coding agent lock-in.</em>
 </div>
 
 ## Origins
@@ -169,7 +169,7 @@ Here's what you actually get with `thoughtweave` that you can't find in any othe
 
 6. **Built-in learning and study.** The `/sdd` skill weaves learning into the Discovery phase itself. If you don't understand a technology, a constraint, or a trade-off, the skill helps you study it on the spot - by searching the web, by explaining concepts, by asking clarifying questions. No other SDD tool treats the specification process as a learning opportunity.
 
-7. **Lightweight, zero lock-in.** Spec Kit requires a CLI, Python, and `uvx`. cc-sdd is an npm package with 17 skills. BMAD requires 12+ agent personas. `thoughtweave` is three skills installed via `npx skills add <repo>` - no CLI, no dependencies, no runtime, no vendor lock-in. Just markdown files any agent can read.
+7. **Lightweight, zero lock-in.** Spec Kit requires a CLI, Python, and `uvx`. cc-sdd is an npm package with 17 skills. BMAD requires 12+ agent personas. `thoughtweave` is three skills installed via `npx skills add <repo>` - no CLI, no runtime, no vendor lock-in. No additional software to install - just markdown files any agent can read.
 
 8. **Security boundary for public skills.** Because these skills are public and importable by anyone, `thoughtweave` includes git hooks (in `.githooks/`) to prevent prompt injection, tool hijacking and unauthorized modifications.
 

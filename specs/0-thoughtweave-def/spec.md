@@ -196,6 +196,8 @@ skills/
 │   └── ...                           x
 ├── init-agents-file/
 │   ├── SKILL.md                      x
+│   ├── references/
+│   │   └── antirez-commenting-philosophy.md   x
 │   └── ...                           x
 ├── sdd/
 │   ├── SKILL.md                      x
@@ -234,12 +236,13 @@ README.md                             x
 REPO_STRUCTURE.md                     ✓
 ```
 
-- `.github/workflows/release.yml` - GitHub Actions workflow for automatic releases on push to master
+- `.github/workflows/release.yml` - GitHub Actions workflow for automatic releases on push to master, with `workflow_dispatch` input (`version_bump`: `major`/`minor`/`patch`) to control semver increment
 - `.githooks/` - git hooks that enforce skill integrity and workflow correctness
 - `docs/` - additional documentation and references (future)
 - `examples/` - usage examples for different coding agents and workflows (future)
 - `skills/changes/` - documents what changed and why after implementation (current)
-- `skills/init-agents-file/` - generates and maintains the `AGENTS.md` file (current)
+- `skills/init-agents-file/` - generates and maintains the `AGENTS.md` file (current). Includes `references/` directory with pre-loaded documentation for configurable areas (e.g., the [Antirez commenting philosophy](https://antirez.com/news/124) article for the **code documentation** area)
+- `skills/init-agents-file/references/` - optional per-skill directory containing documentation files that the skill loads as needed instead of fetching from the web. Files are converted to text-only markdown. Currently contains `antirez-commenting-philosophy.md`
 - `skills/sdd/` - creates implementation-ready specifications from ideas and requirements (current). Includes the [Design TDD subskill](#design-tdd-subskill) at `skills/sdd/design-tdd.md`
 - `skills/<new>/` - future skills will be added here
 - `specs/` - engineering memory of the project. Each feature has a subdirectory containing `spec.md` (intent, decisions, requirements, tests) and `changes.md` (outcome, trade-offs, discovered assumptions). The `0-thoughtweave-def/` subdirectory is the bootstrap spec that defines thoughtweave itself
@@ -305,7 +308,7 @@ Describe the expected workflow for pull requests:
 
 #### Versioning & Releases
 
-Explain that when code is merged to `master` (via PR), a GitHub Actions workflow (`.github/workflows/release.yml`) runs automatically: it reads the latest git tag, increments the version (semver), creates a new tag, and publishes a GitHub Release with auto-generated notes. Pushes to any other branch never trigger a release.
+Explain that when code is merged to `master` (via PR), a GitHub Actions workflow (`.github/workflows/release.yml`) runs automatically. The workflow accepts a `workflow_dispatch` input named `version_bump` (options: `major`, `minor`, `patch`, default: `patch`) to control which semver component to increment. It reads the latest git tag, increments the selected component, creates a new tag, and publishes a GitHub Release with auto-generated notes. Pushes to any other branch never trigger a release.
 
 This means contributors don't need to manage versions manually - versioning is fully automated on merge to `master`. Users install specific versions via `npx skills add <repository>@v<tag>`.
 
@@ -335,17 +338,17 @@ The resulting document should become the engineering contract between developers
 
 ### Behaviour
 
-The skill behaves differently depending on whether the repository is empty or already contains code.
+After understanding the overall goal, the skill behaves differently depending on whether the repository is empty or already contains code. The overall goal from the previous step informs which aspects of the codebase are most relevant to inspect.
 
 **If the repository is empty:**
 
-The skill cannot infer anything from the codebase because there is no codebase. In this case, it should guide the user through defining repository standards and engineering expectations from scratch.
+The skill cannot infer anything from the codebase because there is no codebase. In this case, it should use the overall goal to guide the user through defining repository standards and engineering expectations from scratch, proposing best practices that match the project type.
 
 The skill should propose best practices across different areas and ask which ones should be adopted. The interaction should feel like a conversation with an experienced engineer who is helping you set up your project correctly, not like filling out a form.
 
 **If the repository already exists:**
 
-The skill should inspect the codebase and infer as much context as possible before generating recommendations. This is the more common scenario and the one where the skill provides the most value.
+The skill should inspect the codebase and infer as much context as possible before generating recommendations. The overall goal helps focus the inspection on what matters most for this project - for example, a web project should get deeper scrutiny on API structure and authentication patterns, while a data pipeline project should focus on data flow and processing stages.
 
 This includes:
 
@@ -373,11 +376,26 @@ The skill should check whether an `AGENTS.md` already exists in the repository b
 
 This check exists to prevent accidental overwrites of a previously configured file. It should always run before the [Behaviour section](#behaviour) logic.
 
+### Overall Goal Discovery
+
+Before inspecting the codebase or selecting configurable areas, the skill must first understand the project's overall goal. This is a preliminary question that shapes the entire session:
+
+- Ask the user what the project is about, what they are building, and what they want to achieve with it (e.g., "I'm building a fintech API", "I'm working on an open-source CLI tool", "I'm setting up a monorepo for a SaaS product").
+- Based on the answer, infer which configurable areas are likely relevant and which can be skipped by default. For example, a fintech project will almost certainly need **security** and **testing**, while a personal CLI tool might not need **scalability** or **operational domain**.
+- This also allows per-area questions to branch differently depending on the project type - a question about deployment strategy differs between a mobile app and a backend service.
+
+The overall goal is documented in the generated `AGENTS.md` under the **Domain** section.
+
+> [!TIP]
+> The goal is not to exhaustively define requirements - that's what `/sdd` is for. The goal is to understand the project's nature so the skill can ask relevant questions and propose sensible defaults for each area.
+
 ### Configurable Areas
 
 The skill must present the configurable areas as a **multiple selection** interface. The user should be able to select which areas they want to configure by choosing from the list, rather than being forced through all of them. This keeps the process efficient - if a team does not care about GoF patterns, they skip it.
 
 The skill should display the full list and let the user select the areas they want to cover (e.g., via numbered selection, checkboxes, or comma-separated input). Only the selected areas are then discussed in the sequential interview.
+
+The per-area questions must not be static templates. They should adapt based on the overall goal discovered earlier. For example, if the project is a public web API, the **security** area questions should emphasise authentication, rate limiting, and input validation. If the project is an internal CLI tool, the same area should focus on secret management and local data handling. The overall goal determines which sub-topics within each area are worth exploring, keeping the conversation relevant and concise.
 
 Each area represents a dimension of engineering practice that the `AGENTS.md` file should address:
 
@@ -393,7 +411,7 @@ Each area represents a dimension of engineering practice that the `AGENTS.md` fi
 - **OOP principles** - encapsulation, inheritance, polymorphism, composition preferences;
 - **GoF patterns** - which design patterns are preferred, which are discouraged, which are forbidden;
 - **coding style** - formatting, linting rules, static analysis configuration;
-- **code documentation** - docstrings, inline comments, commenting philosophy. Covers when to comment (function/class docs, design rationale, explaining the "why"), which comment types to prefer and which to avoid. The [Antirez commenting philosophy](https://antirez.com/news/124) - which classifies comments into nine types (function, design, why, teacher, checklist, guide, trivial, debt, backup) and emphasizes that comments should explain what cannot be inferred from code alone, lowering cognitive load rather than stating the obvious - is available as a selectable practice;
+- **code documentation** - docstrings, inline comments, commenting philosophy. Covers when to comment (function/class docs, design rationale, explaining the "why"), which comment types to prefer and which to avoid. The [Antirez commenting philosophy](skills/init-agents-file/references/antirez-commenting-philosophy.md) (loaded from the skill's `references/` directory) - which classifies comments into nine types (function, design, why, teacher, checklist, guide, trivial, debt, backup) and emphasizes that comments should explain what cannot be inferred from code alone, lowering cognitive load rather than stating the obvious - is available as a selectable practice;
 - **technology stack** - languages, frameworks, libraries, versions, compatibility requirements;
 - **operational domain** - the business or technical domain (fintech, healthcare, e-commerce, etc.) and its specific regulations, terminology, and constraints;
 - **repository-specific constraints** - any additional rules that apply specifically to this project.
@@ -415,7 +433,7 @@ The generated file should contain the following sections. Each section serves a 
 - **Repository Structure** - how the codebase is organized and where different types of code live.
 - **Architectural Directives** - architectural rules, patterns and constraints that agents must follow.
 - **Engineering Best Practices** - coding standards, testing requirements and quality expectations.
-- **Workflow Checklist** - the steps that agents should follow when implementing changes. This checklist must always include a step that requires the agent to ask: *"Is this the best way to respect the constraints, requirements and best practices defined by the user?"* For every implementation decision, the agent must self-evaluate whether it is respecting the project's documented constraints rather than blindly generating code. The checklist must also include a **vulnerability scanning step**: after implementation, the agent should scan the produced code for vulnerabilities (dependency issues, insecure patterns, exposed secrets), study each finding, and propose fixes iteratively until the code passes.
+- **Workflow Checklist** - the steps that agents should follow when implementing changes. This checklist must always include a step that requires the agent to ask: *"Is this the best way to respect the constraints, requirements and best practices defined by the user?"* For every implementation decision, the agent must self-evaluate whether it is respecting the project's documented constraints rather than blindly generating code. The checklist must also include a **branch creation step**: after a specification is created and the user is ready to delegate implementation, the agent must ask *"Do you want to open a new branch? If so, what name?"* and create the branch if confirmed. Additionally, the checklist must include a **vulnerability scanning step**: after implementation, the agent should scan the produced code for vulnerabilities (dependency issues, insecure patterns, exposed secrets), study each finding, and propose fixes iteratively until the code passes.
 
 > The generated `AGENTS.md` should also use GitHub alert tags (`> [!IMPORTANT]`, `> [!WARNING]`, `> [!TIP]`, `> [!NOTE]`) to highlight mandatory rules, security-critical constraints, best practices, and contextual notes.
 
@@ -450,22 +468,23 @@ flowchart TD
     E --> G{CLAUDE.md exists as regular file?}:::decision
     G -->|Yes| H[Will replace with symlink to AGENTS.md]:::process
     G -->|No| I[No action needed on CLAUDE.md]:::process
-    H --> J{Repository is empty?}:::decision
+    H --> J[Discover overall project goal]:::process
     I --> J
-    J -->|Yes| K[Propose standard best practices from scratch]:::process
-    J -->|No| L[Inspect existing codebase for context]:::process
-    K --> M[Show configurable areas as multi-select]:::process
-    L --> M
-    M --> N[User picks areas to configure]:::process
-    N --> O[Sequential interview - one question at a time]:::process
-    O --> P[Generate AGENTS.md with all required sections]:::process
-    P --> Q{CLAUDE.md needs symlink?}:::decision
-    Q -->|Yes| R[Create/replace CLAUDE.md as symlink]:::process
-    Q -->|No| S[Validate all sections present]:::process
-    R --> S
-    S -->|Pass| T[End /init-agents-file]:::endclass
-    S -->|Fail| U[Warn user, request confirmation for omissions]:::process
-    U --> T
+    J --> K{Repository is empty?}:::decision
+    K -->|Yes| L[Propose practices matching project goal]:::process
+    K -->|No| M[Inspect codebase, guided by goal]:::process
+    L --> N[Show configurable areas as multi-select]:::process
+    M --> N
+    N --> O[User picks areas to configure]:::process
+    O --> P[Adaptive per-area interview - questions depend on overall goal]:::process
+    P --> Q[Generate AGENTS.md with all required sections]:::process
+    Q --> R{CLAUDE.md needs symlink?}:::decision
+    R -->|Yes| S[Create/replace CLAUDE.md as symlink]:::process
+    R -->|No| T[Validate all sections present]:::process
+    S --> T
+    T -->|Pass| U[End /init-agents-file]:::endclass
+    T -->|Fail| V[Warn user, request confirmation for omissions]:::process
+    V --> U
     end
 ```
 
@@ -474,10 +493,83 @@ The workflow handles the following branches and cases:
 - **`AGENTS.md` exists**: reports state and offers regenerate/update/skip. Skip exits immediately.
 - **`AGENTS.md` missing**: proceeds directly to generation flow.
 - **`CLAUDE.md` exists as file (not symlink)**: flags it for symlink replacement after generation.
-- **Repository empty**: proposes best practices from scratch without codebase inspection.
-- **Repository non-empty**: inspects codebase for context (structure, stack, existing patterns).
+- **Overall goal discovery**: asked once early in the flow, before codebase inspection. The answer informs which areas are relevant and how per-area questions should branch.
+- **Repository empty**: proposes best practices matching the project goal, without codebase inspection.
+- **Repository non-empty**: inspects codebase for context (structure, stack, existing patterns), guided by the overall goal to focus on what matters most.
 - **Configurable areas**: displayed as multi-select - user picks only what matters.
+- **Adaptive per-area interview**: questions for each selected area branch based on the overall goal, not static templates.
 - **Post-generation**: validates all required sections are present; warns on omissions but allows override.
+
+### Skill References
+
+Each skill may include a `references/` directory containing pre-loaded documentation that the skill loads as needed instead of fetching from the web. This avoids network dependencies and ensures the skill works offline.
+
+For the `init-agents-file` skill, the following reference is included:
+
+#### `references/antirez-commenting-philosophy.md`
+
+This file contains the full text of the [Antirez commenting philosophy](https://antirez.com/news/124) article, converted to text-only markdown. The skill loads this file when the user selects the **code documentation** configurable area, instead of fetching the article from the web.
+
+<details>
+<summary>Content (click to expand)</summary>
+
+# Writing system software: code comments.
+
+For quite some time I've wanted to record a new video talking about code comments for my "writing system software" series on YouTube. However, after giving it some thought, I realized that the topic was better suited for a blog post, so here we are. In this post I analyze Redis comments, trying to categorize them. Along the way I try to show why, in my opinion, writing comments is of paramount importance in order to produce good code, that is maintainable in the long run and understandable by others and by the authors during modifications and debugging activities.
+
+Not everybody thinks likewise. Many believe that comments are useless if the code is solid enough. The idea is that when everything is well designed, the code itself documents what the code is doing, hence code comments are superfluous. I disagree with that vision for two main reasons:
+
+1. Many comments don't explain what the code is doing. They explain what you can't understand just from what the code does. Often this missing information is \*why\* the code is doing a certain action, or why it's doing something that is clear instead of something else that would feel more natural.
+
+2. While it is not generally useful to document, line by line, what the code is doing, because it is understandable just by reading it, a key goal in writing readable code is to lower the amount of effort and the number of details the reader should take into her or his head while reading some code. So comments can be, for me, a tool for lowering the cognitive load of the reader.
+
+## Classification of comments
+
+During my research I identified nine types of comments:
+
+- Function comments
+- Design comments
+- Why comments
+- Teacher comments
+- Checklist comments
+- Guide comments
+- Trivial comments
+- Debt comments
+- Backup comments
+
+The first six are, in my opinion, mostly very positive forms of commenting, while the final three are somewhat questionable.
+
+**Function comments** - The goal of a function comment is to prevent the reader from reading code in the first place. After reading the comment, it should be possible to consider some code as a black box that should obey certain rules. Normally function comments are at the top of functions definitions, but they may be at other places, documenting classes, macros, or other functionally isolated blocks of code that define some interface. Function comments are actually a form of in-line API documentation.
+
+**Design comments** - While a function comment is usually located at the start of a function, a design comment is more often located at the start of a file. The design comment basically states how and why a given piece of code uses certain algorithms, techniques, tricks, and implementation. It is a higher level overview of what you'll see implemented in the code.
+
+**Why comments** - Explain the reason why the code is doing something, even if what the code is doing is crystal clear. These comments explain what you can't infer from the code alone.
+
+**Teacher comments** - Don't try to explain the code itself or certain side effects we should be aware of. They teach instead the \*domain\* (for example math, computer graphics, networking, statistics, complex data structures) in which the code is operating, that may be one outside of the reader skills set, or is simply too full of details to recall all them from memory.
+
+**Checklist comments** - Sometimes because of language limitations, design issues, or simply because of the natural complexity arising in systems, it is not possible to centralize a given concept or interface in one piece, so there are places in the code that tell you to remember to do things in some other place of the code.
+
+**Guide comments** - A guide comment babysits the reader, assists him or her while processing what is written in the source code by providing clear division, rhythm, and introducing what you are going to read. Guide comments' sole reason to exist is to lower the cognitive load of the programmer reading some code.
+
+**Trivial comments** - A trivial comment is a guide comment where the cognitive load of reading the comment is the same or higher than just reading the associated code. For example: `array_len++; /* Increment the length of our array. */`
+
+**Debt comments** - Technical debts statements hard coded inside the source code itself: FIXME, TODO, XXX, "This is a hack", are all forms of debt comments.
+
+**Backup comments** - Comments where the developer comments older versions of some code block or even a whole function, because she or he is insecure about the change that was operated in the new one.
+
+## Comments as an analysis tool
+
+Comments are rubber duck debugging on steroids, except you are not talking with a rubber duck, but with the future reader of the code, which is more intimidating than a rubber duck, and can use Twitter. So in the process you really try to understand if what you are stating \*is acceptable\*, honorable, good enough. And if it is not, you make your homework, and come up with something more decent.
+
+It is the same process that happens while writing documentation: the writer attempts to provide the gist of what a given piece of code does, what are the guarantees, the side effects. This is often a bug hunting opportunity. It is very easy while describing something to find that it has holes... You can't really describe it all because you are not sure about a given behavior: such behavior is just emerging from complexity, at random. You really don't want that, so you go back and fix it all.
+
+## Writing good comments is harder than writing good code
+
+You may think that writing comments is a lesser noble form of work. After all you \*can code\*! However consider this: code is a set of statement and function calls, or whatever your programming paradigm is. Sometimes such statements do not make much sense, honestly, if the code is not good. Comments require always to have some design process ongoing, and to understand the code you are writing in a deeper sense. On top of that, in order to write good comments, you have to develop your writing skills. The same writing skills will assist you writing emails, documentation, design documents, blog posts, and commit messages.
+
+I write code because I have an urgent sense to share and communicate more than anything else. Comments coadiuvate the code, assist it, describe our efforts, and after all I love writing them as much as I love writing code itself.
+
+</details>
 
 ### This Repository's `AGENTS.md`
 
@@ -486,19 +578,11 @@ This section defines the `AGENTS.md` content for the `thoughtweave` repository i
 **Domain:** Developer tooling - workflow automation and coding agent skills for structured, intent-driven software engineering. The repository provides reusable markdown skills that guide coding agents through specification, implementation, and documentation phases. Agents should be familiar with the thoughtweave philosophy: intent-first, slow thinking, surfacing hidden assumptions, engineering as understanding.
 
 **Repository Structure:**
-- `skills/init-agents-file/` - skill for generating and maintaining `AGENTS.md`
-- `skills/sdd/` - skill for creating implementation-ready specifications with test design
-- `skills/changes/` - skill for documenting implemented changes with vulnerability scanning
-- `skills/sdd/design-tdd.md` - subskill for designing Given-When-Then test cases during specification
-- `specs/` - permanent engineering memory, organized by feature in subdirectories
-- `terraform/` - Terraform configuration for GitHub branch protection ruleset
-- `tests/` - structural, content, compliance, artifact, githook, and terraform invariant tests
-- `.githooks/pre-commit` and `.githooks/pre-push` - integrity and security hooks
-- `AGENTS.md` - this file, the engineering contract for coding agents
-- `CLAUDE.md` - symlink to `AGENTS.md` for Claude compatibility
+For repository structure refer to [REPO_STRUCTURE](../../REPO_STRUCTURE.md) file.
 
 **Architectural Directives:**
-- All skills are plain markdown files in `skills/<name>/SKILL.md` - no executables, no runtime dependencies.
+- All skills are plain markdown files in `skills/<name>/SKILL.md` - no executables, no additional software to install.
+- Repo structure shall be simple, maintainable, readable, well separed concepts and organized.
 - Skills must be independently usable but designed to work together in sequence: `init-agents-file` → `sdd` → `changes`.
 - Every skill must include pre-condition checks and output validation as defined in this specification.
 - Skill output files (`AGENTS.md`, `spec.md`, `changes.md`) must use GitHub alert tags for scannability.
@@ -520,12 +604,15 @@ This section defines the `AGENTS.md` content for the `thoughtweave` repository i
 When contributing to this repository, the agent must follow these steps in order:
 
 1. Read `IDEA.md` to understand the vision and philosophy of the project.
-2. Read this specification (`specs/0-thoughtweave-def/spec.md`) to understand the full structure, constraints, and testing expectations.
+2. [OPTIONAL] Read [first specification](/specs/0-thoughtweave-def/spec.md) to understand the full structure, constraints, and testing expectations.
 3. Inspect existing implementations before introducing new ones - check `skills/`, `tests/`, and `specs/` for relevant patterns.
-4. If the change is significant, run `/sdd` to create a specification first, then implement, then run `/changes` to document the outcome.
-5. Self-evaluate: *"Is this the best way to respect the constraints, requirements and best practices defined by this specification and AGENTS.md?"*
-6. Git hooks will enforce all checks automatically on commit - ensure the commit succeeds without warnings.
-8. Scan the produced code for vulnerabilities, study each finding, and fix iteratively until the code is clean.
+4. If the change is significant, run `/sdd` to create a specification first.
+5. After the specification is ready, ask the user: *"Do you want to continue on an existing branch or create a new one from master? Merging to master requires a pull request, so working on a feature branch is required."* If the user chooses a new branch, create it from master with the chosen name.
+6. Implement the specification on the selected branch, then run `/changes` to document the outcome.
+7. Update the [REPO_STRUCTURE](../../REPO_STRUCTURE.md) file, if new files are added in the repo or structure is changed.
+8. Self-evaluate: *"Is this the best way to respect the constraints, requirements and best practices defined by this specification and AGENTS.md?"*
+9. Git hooks will enforce all checks automatically on commit - ensure the commit succeeds without warnings.
+10. Scan the produced code for vulnerabilities, study each finding, and fix iteratively until the code is clean.
 
 ## `/sdd`
 
@@ -665,6 +752,8 @@ If the user answers yes to question 3, the skill should perform web searches for
 The user should always decide whether these additional analyses are performed. The skill should not perform them without asking. The user may have privacy concerns, time constraints, or simply prefer to rely on their own knowledge.
 
 If web search returns relevant sources, the skill must report them as clickable references in the generated spec, grouped under a References section at the end of the document. Each source must include the title and a clickable URL so the reader can verify or explore further.
+
+The questions asked during context discovery must not be static templates. They must adapt based on the overall objective of the task and the capabilities of the requester. For example, if the task involves implementing authentication and the user has deep security expertise, the context questions should focus on threat modeling, token storage strategies, and refresh token rotation. If the same task is approached by a developer who is new to authentication, the questions should focus on understanding basic flows, recommending established libraries, and explaining common pitfalls before diving into the spec. The overall objective determines which sub-topics within each area are worth exploring, while the user's capabilities determine the depth and framing of each question. This keeps the conversation relevant, efficient, and appropriately challenging regardless of who is using the skill.
 
 ### Competency Assessment
 
@@ -1741,7 +1830,7 @@ The README should explain how requirements can originate from Jira while making 
 </pre>
 <strong>Turn any coding agent into your favourite mental sparring companion. <br>Define (team) conventions, write intent-driven specs, gain knowledge while composing specs, know what changed.</strong>
 <br>
-<em>Simple, lightweight, and easy to use. Few skills. No external dependencies. No coding agent lock-in.</em>
+<em>Simple, lightweight, and easy to use. Few skills. No additional software to install. No coding agent lock-in.</em>
 <br><br>
 ⦿ <a href="IDEA.md">IDEA.md</a> ⦿ <a href="CONTRIBUTING.md">CONTRIBUTING.md</a> ⦿ <a href="REPO_STRUCTURE.md">REPO_STRUCTURE.md</a><br>⦿ <a href="skills/init-agents-file/">init-agents-file</a> ⦿ <a href="skills/sdd/">sdd</a> ⦿ <a href="skills/changes/">changes</a> ⦿ <a href=".githooks/">githooks</a>
 <br>⦿ <a href="LICENSE">LICENSE</a>
@@ -1808,7 +1897,7 @@ For the full philosophy and vision, read [IDEA.md](IDEA.md). For the complete re
 | **Learning support** | None in core - community extensions | Not addressed | Discovery phase built into `/sdd` |
 | **Who writes code** | The AI agent via `/speckit.implement` | Subagents dispatched autonomously | The developer, guided by the spec |
 | **Skill count** | 11 built-in + extension ecosystem | 14 | 3 |
-| **Maturity** | Production (GitHub, 30+ integrations) | Production v6.0.3 | Pre-alpha |
+| **Maturity** | Production (GitHub, 30+ integrations) | Production v6.0.3 | v0.1.0 - Initial release |
 
 **What you actually get here that you don't find elsewhere:**
 
@@ -1818,7 +1907,7 @@ For the full philosophy and vision, read [IDEA.md](IDEA.md). For the complete re
 4. **Permanent engineering memory** - specs remain as a knowledge base.
 5. **Post-implementation explanation** - `/changes` documents what changed and why.
 6. **Built-in learning** - Discovery phase in `/sdd` teaches you what you don't know.
-7. **Lightweight, zero lock-in** - Few skills, `npx skills add`, no runtime, no dependencies.
+7. **Lightweight, zero lock-in** - Few skills, `npx skills add`, no runtime, no additional software to install.
 8. **Security boundary** - git hooks protect public skills from prompt injection.
 
 For the full pro/cons, see [IDEA.md](IDEA.md#comparison-with-competitors).
@@ -1826,7 +1915,37 @@ For the full pro/cons, see [IDEA.md](IDEA.md#comparison-with-competitors).
 ### How to Use It
 
 0. **Define guidelines** - Run `/init-agents-file` to set up repository standards (once per project).
-1. **Create a specification** - Run `/sdd` to transform ideas into implementation-ready specs with test cases.
+1. **Create a specification** - Run `/sdd` to transform ideas into implementation-ready specs with test cases. If you use Jira, the agent can pull tickets directly - see the Jira integration setup below.
+
+   <details>
+   <summary>Jira Integration (click to expand)</summary>
+
+   Requirements can be pulled directly from Jira via MCP. To enable this, configure the [mcp-atlassian](https://github.com/sooperset/mcp-atlassian) server in your editor or agent's MCP settings:
+
+   ```json
+   {
+     "mcpServers": {
+       "mcp-atlassian": {
+         "command": "uvx",
+         "args": ["mcp-atlassian"],
+         "env": {
+           "JIRA_URL": "https://your-company.atlassian.net",
+           "JIRA_USERNAME": "your.email@company.com",
+           "JIRA_API_TOKEN": "your_api_token"
+         }
+       }
+     }
+   }
+   ```
+
+   **Setup:**
+   1. Create a Jira API token from [https://id.atlassian.com/manage-profile/security/api-tokens](https://id.atlassian.com/manage-profile/security/api-tokens).
+   2. Ensure the token has **read** access to the projects you want to pull tickets from.
+   3. Replace the placeholder values above with your Jira instance URL, email, and API token.
+   4. The agent will then be able to fetch tickets, browse projects, and use them as input for `/sdd`.
+
+   </details>
+
 2. **Implement** - Start a new session. Implement based on the spec.
 3. **Document changes** - Run `/changes` to document what changed, with vulnerability scanning.
 4. **Ship** - Review, adjust, ship. You understand the change because you've been part of every step.
@@ -1843,12 +1962,17 @@ See [Testing & Validation](#testing--validation) for the full specification of t
 
 </details>
 
+> [!TIP]
+> Install the skills with `npx skills add <repository>`, then start your preferred coding agent in web mode and use the slash commands (`/init-agents-file`, `/sdd`, `/changes`) as described in the [workflow](#recommended-workflow) above. The skills are plain markdown - any agent can read and handle them.
+
 ### Versioning & Release
 
-- **Master branch**: versions are identified by semantic versioning tags (e.g., `v1.0.0`, `v1.1.0`). Install via `npx skills add <repository>@v1.0.0`.
+The first released version is `0.1.0`.
+
+- **Master branch**: versions are identified by semantic versioning tags (e.g., `v0.1.0`, `v0.2.0`). Install via `npx skills add <repository>@v0.1.0`.
 - **Other branches**: versions are identified by commit hashes. Install via `npx skills add <repository>#<commit-hash>`.
 
-Releases are created automatically via GitHub Actions on push to `master`: reads latest tag, increments version, creates tag, publishes release with auto-generated notes. The workflow lives in [`.github/workflows/release.yml`](.github/workflows/release.yml), triggers on `master` only, uses semver, and skips if the latest commit already has a tag.
+Releases are created via GitHub Actions on push to `master`. The workflow in [`.github/workflows/release.yml`](.github/workflows/release.yml) accepts a `workflow_dispatch` input called `version_bump` with three options - `major`, `minor`, `patch` (default) - to control which semver component to increment. On push to `master` the workflow reads the latest git tag, increments the specified component, creates a new tag, and publishes a GitHub Release with auto-generated notes. If the latest commit already has a tag, the workflow skips to prevent duplicate releases.
 
 ### License
 
