@@ -695,6 +695,27 @@ In **deep mode**, the competency assessment is mandatory - every identified area
 
 The competency assessment replaces the assumption that every developer has the same baseline knowledge. It is the bridge between understanding the task and beginning the cognitive work - ensuring the agent teaches where needed and challenges where appropriate.
 
+### Task Resumption
+
+When resuming work on a specification that was started but not completed, the skill must not start from scratch. Instead, it should follow these steps:
+
+1. **Detect the incomplete specification** - after the user specifies the output folder (question 2 of the [Ordered Questions](#ordered-questions)), check if a `spec.md` already exists in that folder but is missing required sections (as defined in [Specification Structure](#specification-structure)). Also check if a `draft.md` exists alongside it.
+
+2. **Re-assess competency** - repeat the [Competency Assessment](#competency-assessment) for the areas the spec touches. The user's familiarity may have evolved since the previous session, and re-assessing ensures the conversation is pitched at the right level. This is mandatory - the previous session's level is not assumed to still be accurate.
+
+3. **Recall previous context** - read the existing spec draft, the Decisions, Assumptions & Compromises section (if any), and any `draft.md` to understand what was already discussed and decided.
+
+4. **Summarise the state** - provide a concise summary of what is already in the spec, what is still missing, and which decisions have been made so far.
+
+5. **Offer to resume** - ask: *"You had started a specification for this feature with X sections completed and Y decisions documented. Would you like to continue where you left off?"* If yes, proceed from the last unfinished section. If the user prefers to restart the Discovery phase, offer that as an alternative.
+
+6. **Continue the conversation** - pick up from the last unanswered question or unfinished section, applying the same behavioural rules: one question at a time, intent-first, challenge assumptions.
+
+A partially written specification is treated as a draft in progress, not as a failed attempt. The user's previous thinking and time investment are respected. The re-assessment of competency is what allows the skill to remember the user's level and adapt the conversation accordingly.
+
+> [!NOTE]
+> If the existing `spec.md` is already complete (all required sections present), the skill should not enter task resumption mode. Instead, it should inform the user that a complete spec already exists and ask whether they want to open it for revision or start a new specification.
+
 ### Specification Structure
 
 Specifications should remain focused on reasoning rather than bureaucracy. Every section must add value. If a section would be empty or redundant, the skill should discuss with the user whether it should be included.
@@ -897,6 +918,7 @@ The workflow handles the following branches and cases:
 - **Competency assessment**: asks per-area familiarity (Expert/Comfortable/New) and adapts depth. In light mode, single summary question.
 - **Technical gaps**: if the user is unfamiliar with an area, the skill studies it (web search, explanations) before proceeding.
 - **Design TDD**: after drafting requirements, describes Given-When-Then tests. If user declines, flags as risk.
+- **Incomplete spec detected**: if a `spec.md` exists in the target folder but is missing required sections, the skill enters [Task Resumption](#task-resumption) mode: re-assesses competency, summarises current state, and offers to continue from where the user left off rather than starting from scratch.
 - **Output validation**: checks all required sections exist. Missing sections trigger a warning with override.
 
 ## Specifications Folder
