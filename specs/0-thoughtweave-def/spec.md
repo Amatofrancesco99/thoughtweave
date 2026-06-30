@@ -244,12 +244,37 @@ The skill should progressively ask questions rather than presenting a large ques
 ### Pre-condition Check
 
 The skill should check whether an `AGENTS.md` already exists in the repository before proceeding:
-- If `AGENTS.md` exists, the skill should report its current state (file size, last modified date if available) and ask the user whether they want to regenerate it from scratch, update specific areas, or skip.
+- If `AGENTS.md` exists, the skill should report its current state (file size, last modified date if available) and ask the user whether they want to **regenerate from scratch**, **update specific areas**, or **skip**.
+- **Skip** exits immediately.
+- **Regenerate from scratch** discards the existing file and runs the full generation flow (goal discovery, area selection, per-area interview).
+- **Update specific areas** enters an [Update Mode](#update-mode) where the skill reads the existing file, asks questions about what to modify or add, and merges changes into the current content without discarding it.
 - If `CLAUDE.md` exists as a regular file (not a symlink), the skill must replace it with a symlink pointing to `AGENTS.md`. `AGENTS.md` is always the main file - `CLAUDE.md` is kept as a symlink for Claude compatibility.
 
 This check exists to prevent accidental overwrites of a previously configured file. It should always run before the [Behaviour section](#behaviour) logic.
 
+### Update Mode
+
+When the user chooses **update specific areas**, the skill must not discard the existing `AGENTS.md`. Instead it enters a targeted questioning mode where the overall goal is inferred from the repository itself - not asked from scratch.
+
+1. **Read the existing file** - parse the current content to identify which sections are already populated (Domain, Repository Structure, Architectural Directives, Engineering Best Practices, Workflow Checklist).
+2. **Infer and validate the overall goal** - read the Domain section from the existing `AGENTS.md` to extract the current goal. Present it to the user: *"The repository is currently defined as '...'. Are you evolving in a different direction now?"* If yes, ask what changed and update the goal. If no, keep it as-is. This replaces the standard [Overall Goal Discovery](#overall-goal-discovery) - in update mode the goal is never asked from scratch.
+3. **Ask about what to modify or add** - using a conversational approach, one question at a time. The skill should ask open-ended questions such as:
+   - *"The Domain section currently says: '...'. Has anything changed? Would you like to update it?"*
+   - *"The current Architecture Directives cover X, Y, Z. Do you want to add, remove, or modify any?"*
+   - *"Are there new configurable areas you'd like to configure that aren't covered yet?"*
+4. **Probe for new needs** - after covering each existing section, ask: *"Is there anything else your team needs that isn't documented yet?"* This surfaces new requirements not captured in the original file.
+5. **Defer to the standard flow for new areas** - if the user wants to add content for a configurable area that isn't yet in the file, reuse the [Configurable Areas](#configurable-areas) multi-select and per-area interview for only those new areas. Existing areas are not re-interviewed unless the user requests changes.
+6. **Merge changes** - apply the user's updates to the existing content. Do not regenerate sections that the user did not ask to change.
+7. **Validate** - run the same section validation as the full generation flow. Warn about missing sections but preserve user intent.
+
+This ensures that updating an existing `AGENTS.md` is as conversational as creating one from scratch, without forcing the user to repeat configuration they already did or re-state a goal that is already documented.
+
+> [!TIP]
+> In update mode, the skill should always ask *"Is there anything else you'd like to add or change?"* after each modification, giving the user multiple opportunities to surface new needs rather than assuming the first answer covers everything.
+
 ### Overall Goal Discovery
+
+This section applies to the **from-scratch flow** (when no `AGENTS.md` exists). In [Update Mode](#update-mode), the goal is inferred from the existing file - see the Update Mode section instead.
 
 Before inspecting the codebase or selecting configurable areas, the skill must first understand the project's overall goal. This is a preliminary question that shapes the entire session:
 
@@ -335,10 +360,18 @@ flowchart TD
     A[Start /init-agents-file]:::start --> B{AGENTS.md exists?}:::decision
     B -->|Yes| C[Report current state]:::process
     C --> D{Regenerate, update, or skip?}:::decision
-    B -->|No| E{Run from scratch}:::process
+    B -->|No| E[Run from scratch]:::process
     D -->|Skip| F[End]:::endclass
-    D -->|Regenerate/update| E
+    D -->|Regenerate| E
+    D -->|Update| U1[Read existing AGENTS.md<br>parse current sections]:::process
+    U1 --> U1b[Infer overall goal from<br>Domain section, ask user<br>if direction changed]:::process
     E --> G{CLAUDE.md exists as regular file?}:::decision
+    U1b --> U2[Ask about each existing section:<br>modify or keep?]:::process
+    U2 --> U3{User wants to add<br>new configurable areas?}:::decision
+    U3 -->|No| U4[Merge changes into existing file]:::process
+    U3 -->|Yes| U5[Show new configurable areas<br>as multi-select]:::process
+    U5 --> U6[Per-area interview<br>for new areas only]:::process
+    U6 --> U4
     G -->|Yes| H[Will replace with symlink to AGENTS.md]:::process
     G -->|No| I[No action needed on CLAUDE.md]:::process
     H --> J[Discover overall project goal]:::process
@@ -352,6 +385,7 @@ flowchart TD
     O --> P[Adaptive per-area interview - questions depend on overall goal]:::process
     P --> Q[Generate AGENTS.md with all required sections]:::process
     Q --> R{CLAUDE.md needs symlink?}:::decision
+    U4 --> R
     R -->|Yes| S[Create/replace CLAUDE.md as symlink]:::process
     R -->|No| T[Validate all sections present]:::process
     S --> T
@@ -365,6 +399,8 @@ The workflow handles the following branches and cases:
 
 - **`AGENTS.md` exists**: reports state and offers regenerate/update/skip. Skip exits immediately.
 - **`AGENTS.md` missing**: proceeds directly to generation flow.
+- **Regenerate from scratch**: discards existing file and runs the full generation flow (goal discovery, area selection, per-area interview).
+- **Update mode**: reads existing `AGENTS.md`, parses current sections, infers the overall goal from the Domain section (asks if the direction changed), then asks one question at a time about which sections to modify or add. If new configurable areas are needed, shows a multi-select for new areas only and runs the per-area interview for those. Existing areas are not re-interviewed unless the user requests changes. Changes are merged into the existing file without discarding the rest.
 - **`CLAUDE.md` exists as file (not symlink)**: flags it for symlink replacement after generation.
 - **Overall goal discovery**: asked once early in the flow, before codebase inspection. The answer informs which areas are relevant and how per-area questions should branch.
 - **Repository empty**: proposes best practices matching the project goal, without codebase inspection.
