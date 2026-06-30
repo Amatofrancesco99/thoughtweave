@@ -1,0 +1,79 @@
+#!/bin/sh
+# pre-push: Enforce skill integrity, workflow correctness at push time.
+# Uses remote ref from stdin (git diff between pushed and remote refs).
+# Catches cases where pre-commit was bypassed with --no-verify.
+
+set -e
+
+echo "[pre-push] Running checks..."
+
+while read local_ref local_sha remote_ref remote_sha; do
+  case "$remote_ref" in
+    refs/heads/main) ;;
+    *) continue ;;
+  esac
+
+  # 0000.. means deletion or new branch with no common ancestor
+  [ "$remote_sha" = "0000000000000000000000000000000000000000" ] && continue
+  [ "$local_sha" = "0000000000000000000000000000000000000000" ] && continue
+
+  # Files added between remote and local
+  ADDED=$(git diff --name-only --diff-filter=A "$remote_sha" "$local_sha" || true)
+  # Files added or modified
+  CHANGED=$(git diff --name-only --diff-filter=ACM "$remote_sha" "$local_sha" || true)
+
+  # 1. Verify no new files in skills/ outside known structure
+  KNOWN_SKILLS="changes init-agents-file sdd"
+  for f in $(echo "$ADDED" | grep '^skills/' || true); do
+    skill_dir=$(echo "$f" | cut -d/ -f2)
+    match=false
+    for known in $KNOWN_SKILLS; do
+      if [ "$skill_dir" = "$known" ]; then
+        match=true
+        break
+      fi
+    done
+    if [ "$match" = false ]; then
+      echo "[pre-push] ERROR: New file in unknown skill directory: $f"
+      echo "[pre-push] Only $KNOWN_SKILLS are allowed."
+      exit 1
+    fi
+  done
+
+  # 2. Verify changes.md has sibling spec.md
+  for f in $(echo "$CHANGED" | grep 'changes\.md$' || true); do
+    dir=$(dirname "$f")
+    if ! echo "$CHANGED" | grep -q "$dir/spec.md"; then
+      if [ ! -f "$dir/spec.md" ]; then
+        echo "[pre-push] ERROR: $f pushed without sibling spec.md in $dir"
+        exit 1
+      fi
+    fi
+  done
+
+  # 3. Validate sections in spec.md files being pushed
+  for f in $(echo "$CHANGED" | grep 'spec\.md$' || true); do
+    if [ -f "$f" ]; then
+      content=$(cat "$f")
+      for section in "Objective" "Scope" "Requirements" "Decisions & Compromises" "Tests" "Acceptance Criteria"; do
+        if ! echo "$content" | grep -q "## $section"; then
+          echo "[pre-push] WARNING: $f missing section: $section"
+        fi
+      done
+    fi
+  done
+
+  # 4. Validate sections in changes.md files being pushed
+  for f in $(echo "$CHANGED" | grep 'changes\.md$' || true); do
+    if [ -f "$f" ]; then
+      content=$(cat "$f")
+      for section in "Why" "Overview" "Runtime Impact Summary" "Changes" "Tests" "Workflow Diagram" "Summary"; do
+        if ! echo "$content" | grep -q "## $section"; then
+          echo "[pre-push] WARNING: $f missing section: $section"
+        fi
+      done
+    fi
+  done
+done
+
+echo "[pre-push] All checks passed."

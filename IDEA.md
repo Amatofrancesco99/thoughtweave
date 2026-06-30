@@ -11,7 +11,7 @@
 </pre>
 <strong>Turn any coding agent into your favourite mental sparring companion. <br>Define (team) conventions, write intent-driven specs, gain knowledge while composing specs, know what changed.</strong>
 <br>
-<em>Simple, lightweight, and easy to use. Few skills. No external dependencies. No coding agent lock-in.</em>
+<em>Simple, lightweight, and easy to use. Few skills. No additional software to install. No coding agent lock-in.</em>
 </div>
 
 ## Origins
@@ -169,7 +169,7 @@ Here's what you actually get with `thoughtweave` that you can't find in any othe
 
 6. **Built-in learning and study.** The `/sdd` skill weaves learning into the Discovery phase itself. If you don't understand a technology, a constraint, or a trade-off, the skill helps you study it on the spot - by searching the web, by explaining concepts, by asking clarifying questions. No other SDD tool treats the specification process as a learning opportunity.
 
-7. **Lightweight, zero lock-in.** Spec Kit requires a CLI, Python, and `uvx`. cc-sdd is an npm package with 17 skills. BMAD requires 12+ agent personas. `thoughtweave` is three skills installed via `npx skills add <repo>` - no CLI, no dependencies, no runtime, no vendor lock-in. Just markdown files any agent can read.
+7. **Lightweight, zero lock-in.** Spec Kit requires a CLI, Python, and `uvx`. cc-sdd is an npm package with 17 skills. BMAD requires 12+ agent personas. `thoughtweave` is three skills installed via `npx skills add <repo>` - no CLI, no runtime, no vendor lock-in. No additional software to install - just markdown files any agent can read.
 
 8. **Security boundary for public skills.** Because these skills are public and importable by anyone, `thoughtweave` includes git hooks (in `.githooks/`) to prevent prompt injection, tool hijacking and unauthorized modifications.
 
@@ -201,6 +201,9 @@ Three skills representing the lifecycle of a software change. Each corresponds t
 All specs are stored in the repository's `specs/` folder by default. The SDD skill asks for the location (default `specs/`), the changes skill inherits it.
 
 **3. `/changes`** - Generates `changes.md`, a human-readable explanation of implemented changes. It inspects the codebase (diff, git history, file system) to understand what changed, then verifies that the implementation maps back to what was defined in the specification - checking that requirements, decisions, and acceptance criteria from the spec are actually reflected in the code. It also validates against the requirements and constraints documented in `AGENTS.md`, flagging any deviations. Before generating the document, it runs a vulnerability scan on the implemented code - finds insecure patterns, hardcoded secrets, vulnerable dependencies - studies each finding, and fixes them iteratively. All findings and fixes are documented in the output. Includes Mermaid diagrams with the same consistent styling to visually map what changed, why, and the impact on the system. A single centralized file per feature that tells developers exactly what changed and why, without needing to cross-reference multiple sources. Audience includes developers, reviewers, managers, stakeholders. Written to the same folder as the originating spec. The spec explains intent, the changes document explains outcome - they're two halves of the same story.
+
+> [!IMPORTANT]
+> For writing docs and features - and especially when incrementing an already-started codebase - the agent must have access to the repository and codebase. Without reading the existing code, it cannot understand conventions, module boundaries, or architectural decisions. All three skills depend on the agent's ability to read files, inspect structure, and analyze existing patterns: `/init-agents-file` (inspects repo structure and stack), `/sdd` (context discovery and codebase inspection), and `/changes` (implementation validation against the spec).
 
 ## The specs folder
 
@@ -272,7 +275,7 @@ Looks like many steps. In practice it's faster than regenerating code ten times 
 
 ## Repository security
 
-Since these skills are public and anyone can contribute, the repo itself is exposed to prompt injection, tool hijacking and other manipulation through pull requests. The repo includes git hooks in `.githooks/` that prevent commits and pushes if skill files are modified in ways that deviate from the standard intent - unauthorized tool additions, injected instructions, behaviour redirection. Hooks also run the test suite (`tests/`) to validate structure, content, compliance and artifacts on every commit. By the way, only repository owners can/will push to `master` and merge pull requests, so the `master` branch is always reviewed. On push to `master` only (not on any other branch), a GitHub Actions workflow (`.github/workflows/release.yml`) reads the latest git tag, increments the version, creates a new tag, and publishes a release with auto-generated notes. This ensures that development branches never trigger accidental version bumps. However, if you install from a non-master commit hash, those checks don't apply - review the hash source carefully before using it. If you're contributing to this repository, enable hooks via `git config core.hooksPath .githooks/`.
+Since these skills are public and anyone can contribute, the repo itself is exposed to prompt injection, tool hijacking and other manipulation through pull requests. The repo includes git hooks in `.githooks/` that prevent commits and pushes if skill files are modified in ways that deviate from the standard intent - unauthorized tool additions, injected instructions, behaviour redirection. Hooks also run the test suite (`tests/`) to validate structure, content, compliance and artifacts on every commit. By the way, only repository owners can/will push to `main` and merge pull requests, so the `main` branch is always reviewed. On push to `main` only (not on any other branch), a GitHub Actions workflow (`.github/workflows/release.yml`) reads the latest git tag, increments the version, creates a new tag, and publishes a release with auto-generated notes. This ensures that development branches never trigger accidental version bumps. However, if you install from a non-main commit hash, those checks don't apply - review the hash source carefully before using it. If you're contributing to this repository, enable hooks via `git config core.hooksPath .githooks/`.
 
 ## Contributing
 
@@ -288,7 +291,7 @@ This repository is itself a `thoughtweave` project. You can (and should) use its
 1. **Push and open the PR** - describe what changed and why. Link to the spec if one was written.
 
 > [!IMPORTANT]
-> Changes that deviate from the core philosophy defined in [`IDEA.md`](IDEA.md) or that conflict with the owner's intent will not be merged into `master`. This repository is opinionated by design - not every good idea belongs here. If your change contradicts the fundamental principles (intent-first, developmental objective, anti-de-skilling), it will not be accepted, regardless of its technical merit. When in doubt, open an issue first to discuss alignment before investing time in implementation.
+> Changes that deviate from the core philosophy defined in [`IDEA.md`](IDEA.md) or that conflict with the owner's intent will not be merged into `main`. This repository is opinionated by design - not every good idea belongs here. If your change contradicts the fundamental principles (intent-first, developmental objective, anti-de-skilling), it will not be accepted, regardless of its technical merit. When in doubt, open an issue first to discuss alignment before investing time in implementation.
 
 ### Development setup
 

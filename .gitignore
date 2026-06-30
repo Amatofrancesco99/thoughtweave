@@ -1,0 +1,14 @@
+**/.DS_Store
+node_modules/
+.skills/
+*.log
+*TODO*
+*env*
+
+# Terraform - local cache and state files (never commit)
+.terraform/
+*.tfstate
+*.tfstate.*
+
+# .terraform.lock.hcl is at terraform/.terraform.lock.hcl - explicitly NOT ignored (pins provider versions)
+!.terraform.lock.hcl
