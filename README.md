@@ -17,6 +17,12 @@
 <br>&#10679; <a href="LICENSE">LICENSE</a><br>
 ------<br></div>
 
+<br>
+
+```[bash]
+npx skills add Amatofrancesco99/thoughtweave
+```
+
 ### Simplified Flow Diagram
 
 <pre>
@@ -127,18 +133,16 @@ For the full philosophy, read [`IDEA.md`](IDEA.md). For the complete repository 
 > [!TIP]
 > Each major phase should start a fresh coding-agent session to maintain context quality.
 
-> [!NOTE]
-> Install the skills with `npx skills add <repository>`, then start your preferred coding agent in web mode and use the slash commands ([`/init-agents-file`](skills/init-agents-file/), [`/sdd`](skills/sdd/), [`/changes`](skills/changes/)) as described in the [workflow](#recommended-workflow) above. The skills are plain markdown - any agent can read and handle them.
+Start your preferred coding agent in web mode and use the slash commands ([`/init-agents-file`](skills/init-agents-file/), [`/sdd`](skills/sdd/), [`/changes`](skills/changes/)) as described in the [workflow](#recommended-workflow) above. The skills are plain markdown - any agent can read and handle them.
 
 ## Versioning & Release
 
-The first released version is `0.1.0`.
-
-- **Master branch**: versions identified by semver tags (e.g., `v0.1.0`). Install via `npx skills add <repository>@v0.1.0`.
-- **Other branches**: versions identified by commit hashes. Install via `npx skills add <repository>#<commit-hash>`.
+- **Latest version**: install via `npx skills add Amatofrancesco99/thoughtweave` (always gets the latest release).
+- **Specific version**: install via `npx skills add Amatofrancesco99/thoughtweave@v<tag>` (e.g., `@v0.1.1`).
+- **Commit-specific**: install via `npx skills add Amatofrancesco99/thoughtweave#<commit-hash>`.
 
 > [!CAUTION]
-> Releases are created via GitHub Actions on push to `main`. The workflow in [`.github/workflows/release.yml`](.github/workflows/release.yml) accepts a `workflow_dispatch` input called `version_bump` with three options - `major`, `minor`, `patch` (default) - to control which semver component to increment. On push to `main` the workflow reads the latest git tag, increments the specified component, creates a new tag, and publishes a GitHub Release with auto-generated notes. If the latest commit already has a tag, the workflow skips to prevent duplicate releases.
+> Releases are created via GitHub Actions on push to `main`. The workflow in [`.github/workflows/release.yml`](.github/workflows/release.yml) accepts a `workflow_dispatch` input called `version_bump` with three options - `major`, `minor`, `patch` (default) - to control which semver component to increment. On push to `main` the workflow reads the latest git tag, increments the selected component, creates a new tag, and publishes a GitHub Release with auto-generated notes. If the latest commit already has a tag, the workflow skips to prevent duplicate releases.
 
 ## Contributing
 
