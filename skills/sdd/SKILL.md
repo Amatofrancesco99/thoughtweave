@@ -124,7 +124,7 @@ Functional requirements, non-functional requirements, and implementation guidanc
 Test cases, methodology, validation strategy, and acceptance conditions. Must be detailed enough for implementation based on the spec alone.
 
 ### Acceptance Criteria
-Concrete, measurable conditions that must be satisfied for completion.
+Concrete, measurable conditions that must be satisfied for completion (marked within - [ ] checkboxes).
 
 ### References
 Sources consulted during spec generation, listed as clickable links.
