@@ -152,4 +152,4 @@ Contributions are welcome! See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full
 ## License
 
 [MIT License](/LICENSE). You are free to use, modify and distribute this repository. 
-Attribution is appreciated but not mandatory.
+Attribution is truly appreciated.
